@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#170708">
+  <meta name="description" content="Monster Master — the original tactical card battle, rebuilt for HTML5.">
+  <title>Monster Master</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="classic.css">
+  <script src="asset-fallbacks.js"></script>
+</head>
+<body>
+  <main id="app">
+    <section id="title" class="screen title-screen" aria-label="Monster Master title screen">
+      <div class="title-brand"><span>Monster</span><span>Master</span><strong>Remastered</strong></div>
+      <img class="title-monster" src="assets/title-minotaur.svg" alt="Minotaur holding an axe">
+      <div class="title-menu">
+        <button id="title-play">Play Offline</button>
+        <button id="title-public">Play Public Match</button>
+        <button id="title-private">Play Private Match</button>
+        <button id="how-to">Instructions</button>
+      </div>
+      <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="true">♫ Sound On</button>
+    </section>
+
+    <section id="online" class="screen online-screen hidden" aria-label="Online play">
+      <header><h1 id="online-heading">Play Private Match</h1><button id="online-back" class="metal-button">Main Menu</button></header>
+      <p class="online-intro">Free P2P matches · 2 players · 40 cards each</p>
+      <fieldset id="online-form">
+        <div class="online-settings">
+          <label>Your name<input id="online-name" maxlength="16" value="Player"></label>
+          <label>Avatar<select id="online-avatar"><option value="1">Card Master</option><option value="0">Robot</option><option value="2">Wizard</option><option value="3">Alien</option><option value="4">Master 4</option><option value="5">Master 5</option></select></label>
+        </div>
+        <p id="online-public-preset" class="hidden">Expanded cards · 2000 deck strength · 20 health · 60-second turns · 2-turn barrier · Random first player · Generated decks</p>
+        <div id="online-private-settings" class="online-settings">
+          <label>Cards<select data-online="set"><option value="expanded">Expanded set</option><option value="original">Original set</option></select></label>
+          <label>Deck strength<select data-online="strength"><option>1500</option><option selected>2000</option><option>2500</option></select></label>
+          <label>Starting health<select data-online="health"><option>20</option><option>30</option><option>40</option></select></label>
+          <label>Turn time<select data-online="timer"><option value="0">No timer</option><option value="30">30 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label>
+          <label>Opening barrier<select data-online="barrier"><option value="0">None</option><option value="2" selected>2 turns</option><option value="4">4 turns</option></select></label>
+          <label>First player<select data-online="first"><option value="random">Random</option><option value="host">Host</option><option value="guest">Guest</option></select></label>
+          <label class="online-toggle"><input id="online-custom-deck" type="checkbox"> Custom Deck</label>
+          <label id="online-both-decks-label" class="online-toggle hidden"><input id="online-both-decks" type="checkbox"> Both Players Build Decks</label>
+        </div>
+        <div id="online-join-area"><p class="online-note">Custom Deck opens the deck creator for the host. Enable Both Players Build Decks to let your friend build theirs too; otherwise their deck is generated. Created/imported monsters remain offline-only.</p>
+        <label class="online-join-label">Friend’s invite link or room code<input id="online-code" placeholder="Paste an invite to join" autocomplete="off" spellcheck="false"></label></div>
+      </fieldset>
+      <div id="online-actions" class="online-actions"><button id="online-host">Create Private Match</button><button id="online-public">Find Public Match</button><button id="online-join">Join Friend</button></div>
+      <div id="online-session" class="hidden">
+        <p id="online-rules"></p><p id="online-players"></p>
+        <div id="online-share" class="hidden"><label>Invite link<input id="online-invite" readonly></label><button id="online-copy">Copy Link</button></div>
+        <div class="online-actions"><button id="online-ready" disabled>Ready</button><button id="online-cancel">Cancel</button></div>
+      </div>
+      <p id="online-status" role="status" aria-live="polite"></p>
+      <p class="online-note">All public matches use one default preset. Invites last while the host keeps this page open. Free connection service provided by NetplayJS; availability depends on that service and both players’ networks.</p>
+    </section>
+    <section id="setup" class="screen setup-screen hidden">
+      <h1>Player Setup</h1>
+      <button id="setup-main-menu" class="metal-button setup-main-menu">Main Menu</button>
+      <div class="setup-grid">
+        <div class="duelist duelist-blue">
+          <label>Enter Name:<input id="p1-name" maxlength="16" value="Player 1"></label>
+          <div class="controller-switch" role="group" aria-label="Player one controller">
+            <button class="controller active" data-player="0" data-value="human">Player</button>
+            <button class="controller" data-player="0" data-value="computer">Computer</button>
+          </div>
+          <div class="avatar-picker">
+            <button class="avatar-arrow" data-avatar-player="0" data-dir="-1" aria-label="Previous avatar">◀</button>
+            <div class="avatar-frame"><img id="avatar-0" src="assets/avatar-1.svg" alt="Player one avatar"></div>
+            <button class="avatar-arrow" data-avatar-player="0" data-dir="1" aria-label="Next avatar">▶</button>
+          </div>
+          <div class="strength-row"><strong>Deck Strength:</strong><output id="strength-value-0">2000</output></div>
+          <input class="strength" id="strength-0" type="range" min="1500" max="2500" step="100" value="2000" aria-label="Player one deck strength">
+          <button class="custom-deck-button" data-custom="0">Use Custom Deck</button>
+        </div>
+        <div class="duelist duelist-red">
+          <label>Enter Name:<input id="p2-name" maxlength="16" value="Computer" disabled></label>
+          <div class="controller-switch" role="group" aria-label="Player two controller">
+            <button class="controller" data-player="1" data-value="human">Player</button>
+            <button class="controller active" data-player="1" data-value="computer">Computer</button>
+          </div>
+          <div class="avatar-picker">
+            <button class="avatar-arrow" data-avatar-player="1" data-dir="-1" aria-label="Previous avatar">◀</button>
+            <div class="avatar-frame"><img id="avatar-1" src="assets/avatar-0.svg" alt="Player two avatar"></div>
+            <button class="avatar-arrow" data-avatar-player="1" data-dir="1" aria-label="Next avatar">▶</button>
+          </div>
+          <div class="strength-row"><strong>Deck Strength:</strong><output id="strength-value-1">2000</output></div>
+          <input class="strength" id="strength-1" type="range" min="1500" max="2500" step="100" value="2000" aria-label="Player two deck strength">
+          <button class="custom-deck-button" data-custom="1">Use Custom Deck</button>
+        </div>
+      </div>
+      <div class="setup-options"><div><button id="create-card" class="metal-button">Create / Edit Cards</button></div></div>
+      <label class="card-set-toggle"><input id="original-only" type="checkbox"><span></span> Original cards only</label>
+      <button id="start-game" class="ok-button">OK</button>
+    </section>
+
+    <section id="game" class="screen game-screen hidden" aria-label="Monster Master game board">
+      <div id="opponent" class="player-half opponent-half">
+        <aside class="player-rail">
+          <div class="pile deck"><img src="assets/classic-card-back.svg" alt=""><span id="p2-deck">40</span></div>
+          <strong id="p2-label">Computer</strong>
+          <img id="p2-avatar" class="board-avatar" src="assets/avatar-0.svg" alt="">
+          <div class="player-health red"><i id="p2-life-bar"></i><b id="p2-life">20</b></div>
+        </aside>
+        <div class="play-area">
+          <div id="p2-hand" class="hand opponent-hand" aria-label="Opponent hand"></div>
+          <div id="p2-field" class="field" aria-label="Opponent monsters"></div>
+        </div>
+        <aside class="side-slot"><div id="p2-grave-pile" class="pile grave"><span id="p2-grave">0</span><small>Graveyard</small></div></aside>
+      </div>
+
+      <div class="divider">
+        <button id="menu-button" class="menu-button">MENU</button>
+        <div id="turn-label" class="turn-label">Player 1’s turn</div>
+        <div id="online-clock" class="online-clock"></div>
+        <div id="barrier" class="barrier hidden"><span>Barrier</span><b>2</b></div>
+        <button id="end-turn" class="end-turn" aria-label="End turn"><span>↻</span></button>
+      </div>
+
+      <div id="player" class="player-half player-half-bottom">
+        <aside class="player-rail">
+          <strong id="p1-label">Player 1</strong>
+          <img id="p1-avatar" class="board-avatar" src="assets/avatar-1.svg" alt="">
+          <div class="player-health blue"><i id="p1-life-bar"></i><b id="p1-life">20</b></div>
+          <div class="pile deck"><img src="assets/classic-card-back.svg" alt=""><span id="p1-deck">40</span></div>
+        </aside>
+        <div class="play-area">
+          <div id="p1-field" class="field" aria-label="Your monsters"></div>
+          <div id="p1-hand" class="hand" aria-label="Your hand"></div>
+        </div>
+        <aside class="side-slot"><div id="p1-grave-pile" class="pile grave"><span id="p1-grave">0</span><small>Graveyard</small></div></aside>
+      </div>
+
+      <button id="opponent-target" class="opponent-target" aria-label="Attack opponent"></button>
+      <div id="hint" class="hint" aria-live="polite">Choose a card.</div>
+      <aside id="battle-log" class="battle-log" aria-label="Battle log"></aside>
+
+      <div id="battle-overlay" class="battle-overlay hidden" aria-live="assertive">
+        <div class="battle-panel">
+          <div class="battle-title">Battle!</div>
+          <div id="battle-matchup" class="battle-matchup"></div>
+          <div id="battle-attacker" class="battle-card"></div>
+          <div class="battle-roll attack-roll"><small>Attack</small><b id="attack-roll">0</b></div>
+          <div class="versus">VS</div>
+          <div class="battle-roll defense-roll"><small>Defense</small><b id="defense-roll">0</b></div>
+          <div id="battle-defender" class="battle-card"></div>
+          <div id="battle-result" class="battle-result">Rolling…</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="modal"><div id="modal-content"></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="drag-ghost" class="drag-ghost hidden"></div>
+  <audio id="card-sound" src="assets/card.mp3" preload="auto"></audio>
+  <audio id="hit-sound" src="assets/hit.mp3" preload="auto"></audio>
+  <audio id="ui-sound" src="assets/ui.mp3" preload="auto"></audio>
+  <audio id="menu-music" src="assets/menu-theme.mp3" preload="auto" loop></audio>
+  <script src="custom-cards.js"></script>
+  <aside id="online-chat" class="online-chat hidden" aria-label="Opponent chat">
+    <button id="chat-toggle" aria-expanded="false" aria-controls="chat-panel">Chat</button>
+    <section id="chat-panel" class="hidden">
+      <header><strong>Opponent chat</strong><button id="chat-close" aria-label="Close chat">×</button></header>
+      <div id="chat-messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <form id="chat-form"><label for="chat-input">Message</label><div><input id="chat-input" maxlength="300" autocomplete="off" placeholder="Type a message…"><button type="submit">Send</button></div></form>
+      <p id="chat-status" role="status"></p>
+    </section>
+  </aside>
+  <script src="online.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

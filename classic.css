@@ -1,0 +1,349 @@
+/* Flash reference: a fitted 800 × 600 stage. Load after styles.css. */
+:root {
+  --card-w: calc(8.75 * var(--game-vw));
+  --card-h: calc(16.6667 * var(--game-vh));
+  --bevel: inset 0 0 0 1px #111, inset 0 0 0 3px #555,
+    inset 0 0 0 5px #272727, inset 0 0 9px 7px #161616;
+}
+.screen { margin-top: 0; align-self: center; }
+.game-screen { grid-template-rows: 48.3333% 3.3334% 48.3333%; }
+.player-half {
+  padding: 0; gap: 0; grid-template-columns: 15% 68.75% 16.25%;
+  background: linear-gradient(90deg, #984b4c, #c16668 50%, #994e50);
+}
+.player-half-bottom { background: linear-gradient(90deg, #504b9c, #6460b8 50%, #504b96); }
+.play-area { position: relative; display: block; }
+.play-area > div {
+  position: absolute; left: 0; width: 100%; height: 41.3793%;
+  border: 0; box-shadow: none;
+  background: radial-gradient(ellipse at center, #944a4a, #351b1e 100%);
+}
+.opponent-half .hand { top: 8.6207%; }
+.opponent-half .field { bottom: 3.4483%; }
+.player-half-bottom .field { top: 3.4483%; }
+.player-half-bottom .hand { bottom: 8.6207%; }
+.player-half-bottom .play-area > div { background: radial-gradient(ellipse at center, #4b488f, #191932 100%); }
+.hand, .field {
+  gap: calc(.25 * var(--game-vw)); padding: calc(.5 * var(--game-vh)) calc(.5 * var(--game-vw));
+  justify-content: safe center; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+}
+.hand::-webkit-scrollbar, .field::-webkit-scrollbar { height: 0; }
+.player-rail { display: block; }
+.player-rail > strong {
+  position: absolute; left: 2%; right: 2%; text-align: center;
+  font-size: calc(3 * var(--game-vh)); text-shadow: none; line-height: 1.1;
+}
+.opponent-half .player-rail > strong { top: 50%; }
+.player-half-bottom .player-rail > strong { top: 5%; }
+.board-avatar { position: absolute; left: 3%; width: 86%; height: 33%; object-fit: contain; filter: none; }
+.opponent-half .board-avatar { top: 57%; }
+.player-half-bottom .board-avatar { top: 12%; }
+.player-health {
+  position: absolute; left: 9%; width: 75%; height: 2.6%; min-height: 0;
+  border: 0; background: #71675c; box-shadow: none;
+}
+.opponent-half .player-health { top: 89%; }
+.player-half-bottom .player-health { top: 44.3%; }
+.player-health i {
+  background: repeating-linear-gradient(90deg, #ffbf09 0, #fff369 calc(.35 * var(--game-vw)), #ffdc12 calc(.48 * var(--game-vw)), #bc8100 calc(.58 * var(--game-vw)));
+  box-shadow: 0 0 3px #ffd52c;
+}
+.player-health b, .pile > span, .pile.grave > small, .hint, .battle-log {
+  /* Keep counts and instructions accessible without adding labels to the stage. */
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.pile.deck {
+  position: absolute; left: 13%; width: 66%; height: 38%; margin: 0;
+  background: radial-gradient(ellipse, #753e3e, #3e2728);
+}
+.opponent-half .pile.deck { top: 7%; }
+.player-half-bottom .pile.deck { bottom: 5.5%; background: radial-gradient(ellipse, #3a386e, #22203f); }
+.pile.deck img { width: 90%; height: 92%; filter: none; }
+.side-slot { position: relative; display: block; }
+.pile.grave, .pile.grave:has(.grave-card) {
+  position: absolute; left: 21%; top: 33%; width: 66%; height: 38%;
+  aspect-ratio: auto; border: 0; box-shadow: none;
+  background: radial-gradient(ellipse, #8b4a4e, #3d2528);
+}
+.player-half-bottom .pile.grave { top: 30%; background: radial-gradient(ellipse, #464387, #242244); }
+.pile.grave .grave-card { width: var(--card-w); height: var(--card-h); margin: 0; }
+.divider {
+  border-top: calc(.35 * var(--game-vh)) solid #131313;
+  border-bottom: calc(.35 * var(--game-vh)) solid #101010;
+  background: linear-gradient(#777 0, #aaa 24%, #777 45%, #555 75%, #252525 100%);
+  box-shadow: 0 1px 0 #090909; z-index: 8;
+}
+.divider:before { display: none; }
+.menu-button {
+  top: 50%; transform: translateY(-50%); width: 6.8%; height: calc(6.4 * var(--game-vh));
+  border: calc(.5 * var(--game-vh)) solid #252525; border-left: 0;
+  border-radius: 0 calc(3 * var(--game-vh)) calc(3 * var(--game-vh)) 0;
+  background: linear-gradient(#636363, #2c2c2c); box-shadow: inset 0 2px 2px #888, 0 0 0 1px #111;
+  padding: 0; font-size: calc(1.9 * var(--game-vh)); font-weight: bold; color: #c6c0b0; z-index: 4;
+}
+.turn-label {
+  left: 50%; right: auto; width: max-content; max-width: 75%; transform: translate(-50%, -50%);
+  padding: 0 calc(3 * var(--game-vw)); text-align: center; color: transparent; text-transform: none;
+  isolation: isolate; opacity: 0;
+  font-size: calc(2.6 * var(--game-vh)); line-height: 1; pointer-events: none;
+}
+.turn-label::before {
+  content: ''; position: absolute; inset: -25% -8%; z-index: -1;
+  background: radial-gradient(ellipse, #fff 0%, #fffffff0 30%, #ffffff90 55%, transparent 75%);
+  filter: blur(calc(.3 * var(--game-vh)));
+}
+.turn-label.announcing { color: #111; opacity: 1; animation: announcement-fade .95s ease-in-out both; }
+@keyframes announcement-fade {
+  0%, 100% { opacity: 0; }
+  15%, 60% { opacity: 1; }
+}
+.end-turn {
+  right: calc(-2.2 * var(--game-vw)); width: calc(12.5 * var(--game-vw)); height: calc(16.8 * var(--game-vh));
+  border: calc(.6 * var(--game-vh)) solid #141414; border-radius: 50%;
+  background: radial-gradient(circle, #2d2d2d 43%, #595959 54%, #838383 60%, #333 66%, #181818 72%);
+  box-shadow: inset 0 0 4px #aaa, 0 0 0 1px #0a0a0a; padding: 0; z-index: 5;
+}
+.end-turn span {
+  display: block; width: 68%; height: 68%; color: transparent; font-size: 0;
+  background: url('assets/turn-arrow.svg') center / contain no-repeat;
+}
+.end-turn:disabled { filter: none; opacity: 1; cursor: default; }
+.end-turn:hover:enabled { filter: brightness(1.15); }
+.barrier:before, .barrier:after { height: 2px; background: #c9ffff; box-shadow: 0 0 4px #aff, 0 0 8px #00bded; animation: none; }
+.barrier:before { top: -2px; }
+.barrier:after { bottom: -2px; }
+.divider:has(.barrier:not(.hidden)) .end-turn { box-shadow: 0 0 0 2px #c6ffff, 0 0 8px 4px #0acbe7; }
+.opponent-target { left: .5%; width: 14%; }
+
+/* Original cards have quiet borders and individually tinted faces. */
+.card, .card-back {
+  border: calc(.3 * var(--game-vh)) solid #171717; border-radius: calc(.9 * var(--game-vh));
+  box-shadow: inset 0 0 2px #0009; transform: none;
+}
+.card-back { background: #ce3100 url('assets/classic-card-back.svg') center / 100% 100% no-repeat; }
+.card.monster, .card.monster.exhausted { background: linear-gradient(115deg, var(--face-top, #778575), var(--face-bottom, #444b3c)); }
+.card.playable, .card.ready, .card.unavailable { border-color: #171717; box-shadow: inset 0 0 2px #0009; filter: none; }
+.card:hover, .card:focus-visible { transform: none; border-color: #e3d071; box-shadow: inset 0 0 0 1px #e3d071; z-index: 10; }
+.card:focus-visible { outline: 1px solid #fff1a8; outline-offset: -2px; }
+.card.selected { transform: none; border-color: #f8df3c; box-shadow: 0 0 5px #f5d500; }
+.card.unavailable { cursor: not-allowed; }
+.card.monster .card-name, .card .card-name {
+  position: absolute; left: 4%; right: 4%; top: 1%; height: 15%; padding: 0;
+  text-align: left; font-size: calc(1.72 * var(--game-vh)); font-weight: bold; line-height: 1.22;
+}
+.card-text.info-scrolling { display: block !important; overflow: hidden; }
+.battle-notes.info-scrolling { scrollbar-width: none; }
+.card.monster .card-name { text-overflow: clip; }
+.card.monster .card-name.fitted-name svg { display: block; width: 100%; height: 90%; fill: currentColor; font-family: inherit; font-weight: bold; }
+.card .frozen-overlay, .card .stunned-overlay { left: 7%; right: 7%; top: 16%; height: 55%; }
+.card.monster .card-art { left: 7%; right: 7%; top: 16%; width: 86%; height: 55%; filter: none; object-fit: fill; }
+.card.monster.exhausted .card-art { filter: brightness(.62); }
+.card.exhausted:after, .card.summoning:after { display: none; }
+.card.monster .card-text {
+  top: 16%; height: 55%; border: 1px solid #c5b63c; background: #343434e8; padding: 4%;
+  font-size: calc(1.48 * var(--game-vh)); line-height: 1.06; font-weight: normal;
+}
+.card.monster .turn-badge {
+  top: 57%; right: 8%; padding: 0; background: transparent; color: #ddd;
+  font-size: calc(1.48 * var(--game-vh)); text-shadow: 0 1px #494949; font-weight: normal;
+}
+.card.monster .monster-health { left: 9%; right: 7%; bottom: 17%; height: 8%; gap: 1px; }
+.health-pip { flex: 0 1 calc(.65 * var(--game-vw)); max-width: calc(.65 * var(--game-vw)); border: 0; border-radius: 0; }
+.health-pip.filled { background: linear-gradient(90deg, #ffc114, #fff568, #f7b719); box-shadow: 0 0 2px #ffe000; }
+.health-pip:not(.filled), .battle-card .health-pip.lost { visibility: hidden; }
+.card.monster .stats { left: 5%; right: 4%; bottom: 0; height: 16%; }
+.card.monster .stat { padding: 0; font-size: calc(1.7 * var(--game-vh)); font-weight: normal; text-shadow: none; min-width: 42%; display: flex; gap: 12%; align-items: center; justify-content: center; }
+.stat.attack:before, .stat.defense:before { content: ''; display: inline-block; width: calc(1.35 * var(--game-vw)); height: calc(1.9 * var(--game-vh)); background: url('assets/sword.svg') center / contain no-repeat; }
+.stat.defense:before { background-image: url('assets/shield.svg'); }
+.card .combiner-symbol { right: 5%; font-size: calc(1.7 * var(--game-vh)); }
+.card.monster .stat.stat-increased { color: #172bb9; font-weight: bold; }
+.card.monster .stat.stat-decreased { color: #b9211c; font-weight: bold; }
+.summoning-overlay { top: 16%; height: 55%; border: 0; background: linear-gradient(90deg, #526e4e, #6e8a65, #526e4e); }
+.summoning-overlay:before { display: none; }
+.summoning-overlay small { font-size: calc(1.3 * var(--game-vh)); font-weight: normal; }
+.summoning-overlay b { font-size: calc(3 * var(--game-vh)); }
+.card.summoning .turn-badge { display: none; }
+.card:not(.monster) {
+  background: radial-gradient(ellipse at 35% 65%, var(--spell-light, #bcc1a6), var(--spell-dark, #646854));
+}
+.card:not(.monster) .spell-decal {
+  display: block; position: absolute; left: 7%; top: 16%; width: 86%; height: 78%;
+  margin: 0; padding: 0; border: 0; background: none; object-fit: contain;
+  opacity: .42; filter: none; mix-blend-mode: normal; z-index: 0; pointer-events: none;
+}
+.card:not(.monster) .card-name { z-index: 2; }
+.card:not(.monster) .spell-decal[src$=".svg"] { opacity: 1; }
+/* The newer artwork uses the same full-height emblem treatment as Flash.
+   Clip the supplied PNGs at display time; their source pixels stay intact. */
+.card:not(.monster):has(.spell-decal[src$=".png"]) {
+  background: radial-gradient(ellipse at 48% 48%, var(--spell-light) 12%, var(--spell-dark) 100%);
+}
+.card:not(.monster) .spell-decal[src$=".png"] {
+  left: 2%; top: 10%; width: 96%; height: 80%; object-fit: fill;
+  clip-path: var(--decal-clip, none);
+}
+.card[data-card-name="Berserk"] {
+  --decal-clip: polygon(22.4% 9.5%, 29.2% 12.4%, 33.5% 16.2%, 32.8% 19.9%, 38.4% 16.5%, 41.6% 13.3%, 41.3% 9.5%, 47% 9.6%, 52% 11.8%, 56.6% 15.3%, 60.7% 20.5%, 63.1% 26.2%, 64.8% 37.5%, 60.8% 30.3%, 56% 26.5%, 53.5% 27.7%, 52.3% 31%, 85.9% 85.3%, 86.8% 91%, 69.8% 86.4%, 68.4% 80.6%, 47.4% 43.2%, 43.4% 43.7%, 47.3% 54.8%, 39.1% 54%, 31.4% 50.9%, 25.8% 46.6%, 20.6% 41.4%, 15.2% 33.9%, 12.1% 25.7%, 11.8% 19.4%, 13.6% 14.7%, 16.5% 18.5%, 21.6% 20.3%, 26.4% 19.4%, 23.6% 17.1%);
+}
+.card[data-card-name="Freeze"] {
+  --decal-clip: polygon(42.8% 3.7%, 54.4% 12.9%, 60.6% 14.1%, 69.9% 18.4%, 74.6% 27.1%, 82.8% 28.3%, 86.8% 36.6%, 89.1% 45%, 83.2% 63.9%, 90.1% 78.5%, 85.5% 88.3%, 76.9% 95.3%, 61.1% 94.5%, 55.6% 93.4%, 39.8% 95.3%, 25% 93%, 16.2% 89.1%, 12.1% 80.5%, 20.3% 72.3%, 12.1% 62.5%, 15.8% 54.9%, 12.5% 40.8%, 14.1% 33.8%, 22.3% 29.3%, 23.4% 21.9%, 35.2% 18%);
+}
+.card[data-card-name="Time Warp"] {
+  --decal-clip: polygon(40.3% 7.2%, 47.2% 6.7%, 64.1% 10.6%, 72.2% 15.4%, 77.3% 17.2%, 75.3% 23.8%, 71.6% 24.2%, 68% 41.3%, 65.8% 50.7%, 63.9% 62.8%, 61.5% 75%, 62.7% 81.3%, 65.9% 81.3%, 65.1% 87.2%, 54.3% 87%, 38.3% 83.7%, 26.4% 79%, 23.6% 76.6%, 25.7% 69.7%, 28.5% 69.9%, 29.1% 64.1%, 35.7% 44%, 34.7% 41.9%, 36.3% 38.8%, 35.3% 37.1%, 37.1% 25.8%, 40.3% 15.6%, 38.9% 13.2%);
+}
+.card[data-card-name="Monster Egg"] {
+  --decal-clip: polygon(52.15% 13.87%, 58.79% 16.02%, 63.87% 21.88%, 68.95% 32.03%, 72.85% 44.14%, 74.80% 56.64%, 76.37% 54.10%, 82.42% 50.78%, 79.49% 56.64%, 78.71% 61.52%, 82.23% 58.79%, 80.86% 63.87%, 89.65% 56.45%, 86.91% 62.50%, 85.55% 65.23%, 91.02% 64.84%, 95.12% 69.14%, 90.23% 67.77%, 87.70% 70.12%, 89.45% 70.31%, 87.11% 74.80%, 94.73% 81.45%, 87.11% 78.52%, 83.79% 81.84%, 85.16% 82.81%, 80.86% 85.16%, 89.26% 87.30%, 82.81% 89.45%, 76.37% 88.67%, 70.70% 89.84%, 66.99% 88.48%, 66.60% 92.19%, 62.11% 89.45%, 55.08% 90.62%, 49.61% 90.04%, 44.53% 90.43%, 40.04% 89.06%, 32.81% 91.80%, 34.96% 88.48%, 30.47% 90.04%, 25.78% 87.89%, 18.95% 88.67%, 23.05% 85.55%, 14.06% 83.40%, 9.57% 83.79%, 11.91% 81.05%, 15.43% 77.54%, 6.25% 78.91%, 9.18% 75.78%, 12.89% 73.24%, 10.16% 70.51%, 12.30% 68.55%, 5.86% 70.90%, 8.40% 66.80%, 15.23% 63.09%, 18.95% 62.70%, 15.82% 60.55%, 11.13% 57.62%, 15.62% 58.40%, 17.77% 59.96%, 19.14% 54.88%, 17.19% 48.83%, 21.88% 52.54%, 25.00% 56.64%, 27.15% 43.36%, 31.25% 32.23%, 38.28% 22.46%, 43.55% 17.38%, 48.83% 15.04%);
+}
+.card[data-card-name="Double Hit"] .spell-decal {
+  /* Feather the flame tips without bringing back their rectangular backdrop. */
+  mask-image: linear-gradient(45deg, transparent 33%, #000 44%, #000 56%, transparent 67%), linear-gradient(-45deg, transparent 33%, #000 44%, #000 56%, transparent 67%);
+}
+.card[data-card-name="Plague"] .spell-decal {
+  mask-image: radial-gradient(ellipse at 50% 49%, #000 39%, transparent 70%);
+}
+.card[data-card-name="Undying"] .spell-decal {
+  mask-image: radial-gradient(ellipse at 51% 51%, #000 33%, transparent 70%);
+}
+.card:not(.monster) .card-text {
+  position: absolute; top: 16%; left: 7%; width: 86%; height: 76%; padding: 0 3%;
+  display: flex; align-items: center; justify-content: center; font-size: calc(1.55 * var(--game-vh));
+  line-height: 1.15; text-align: center; z-index: 1;
+}
+.card:not(.monster):has(.spell-decal[src$=".png"]) .card-text {
+  left: 4%; width: 92%; padding: 0 2%; font-size: calc(1.2 * var(--game-vh)); line-height: 1.16;
+}
+.card.zone-grave { opacity: 1; cursor: default; }
+.card-art.missing-art { object-fit: contain; }
+
+/* The original battle is a small, square-cornered inset with an undimmed board. */
+.battle-overlay { position: absolute; inset: 0; background: transparent; z-index: 300; }
+.battle-panel {
+  width: calc(50 * var(--game-vw)); height: calc(42 * var(--game-vh)); border: calc(.5 * var(--game-vh)) solid #101010;
+  border-radius: 0; box-shadow: var(--bevel); background: #333; display: block;
+}
+.battle-title, .battle-matchup { display: none; }
+.battle-card { position: absolute; top: 23%; width: 18.5%; display: block; transform-origin: 50% 35%; }
+#battle-attacker { left: 10%; }
+#battle-defender { right: 10%; }
+.battle-card .card { display: block; transform: none; cursor: default; }
+.battle-card .card:hover { border-color: #171717; box-shadow: inset 0 0 2px #0009; }
+.battle-card .card:hover .card-text { opacity: 0; }
+.battle-card .battle-notes { position: relative; top: auto; margin-top: calc(.8 * var(--game-vh)); left: -9%; width: 118%; max-height: calc(12 * var(--game-vh)); overflow-y: auto; scrollbar-width: thin; text-align: center; font-size: calc(1.4 * var(--game-vh)); line-height: 1.05; color: white; }
+.cinder-burn { position: absolute; left: 7%; top: 16%; width: 86%; height: 55%; z-index: 16; pointer-events: none; overflow: hidden; background: radial-gradient(ellipse at bottom, #ff8b0099, transparent 75%); animation: cinder-glow .65s ease-out both; }
+.cinder-burn i { position: absolute; bottom: -12%; left: calc(4% + var(--flame-index) * 17%); width: 26%; height: 75%; border-radius: 80% 15% 55% 45%; background: radial-gradient(ellipse at bottom, #fffbd0 5%, #ffe147 25%, #ff8a00 55%, #e63200 80%, transparent 95%); transform-origin: center bottom; animation: cinder-flame .48s ease-out both; animation-delay: calc(var(--flame-index) * .035s); }
+@keyframes cinder-flame { 0% { opacity: 0; transform: translateY(40%) scale(.5) rotate(-12deg); } 30% { opacity: 1; } 65% { opacity: .9; transform: translateY(-5%) scale(1) rotate(8deg); } 100% { opacity: 0; transform: translateY(-60%) scale(.6) rotate(-8deg); } }
+@keyframes cinder-glow { 0%, 100% { opacity: 0; } 20%, 65% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .cinder-burn, .cinder-burn i { animation: none; } .cinder-burn i { opacity: .65; } }
+.battle-card.battle-unit-damaged { animation: battle-card-damage .52s ease-out; }
+.battle-card .card.battle-damaged { animation: none; }
+.battle-notes .battle-effect { display: block; background: radial-gradient(ellipse, #c600a4, #570075 85%, transparent); color: #080808; margin-bottom: 3px; }
+.battle-notes .battle-effect.beneficial { background: radial-gradient(ellipse, #ffde35, #ccaa26 65%, transparent); }
+.battle-notes p { margin: 3px 0 0; }
+.battle-roll { position: absolute; top: 43%; width: 10%; height: 16%; display: grid; place-items: center; background: url('assets/sword.svg') center / contain no-repeat; }
+.attack-roll { left: 34%; }
+.defense-roll { right: 34%; background-image: url('assets/shield.svg'); }
+.battle-roll small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.battle-roll b { font-size: calc(3.8 * var(--game-vh)); text-shadow: 0 1px 2px #333, 0 0 3px white; }
+.battle-roll b.lucky-result { color: #ffe229; text-shadow: 0 1px 2px #332900, 0 0 5px #ffbf00; }
+.lucky-roll-label { position: absolute; top: 110%; left: -65%; width: 230%; padding: 8% 0; color: #111; font-size: calc(1.8 * var(--game-vh)); white-space: nowrap; isolation: isolate; animation: announcement-fade .95s ease-in-out both; }
+.lucky-roll-label::before { content: ''; position: absolute; inset: -15% -8%; z-index: -1; background: radial-gradient(ellipse, #fff 0%, #fffffff0 30%, #ffffff90 55%, transparent 75%); filter: blur(calc(.3 * var(--game-vh))); }
+.versus { position: absolute; left: 45%; top: 44%; width: 10%; font-size: calc(3.5 * var(--game-vh)); text-transform: lowercase; }
+.battle-result { left: 30%; right: 30%; bottom: 8%; font-size: calc(1.35 * var(--game-vh)); font-weight: normal; }
+.battle-result.rolling { visibility: hidden; }
+.battle-panel.hit, .battle-panel.block { animation: none; }
+.battle-panel.hit .battle-result { color: #e3d8b2; }
+.battle-panel.block .battle-result { color: #ddd; }
+.battle-card .battle-damage-number { font-size: calc(3.2 * var(--game-vh)); }
+
+/* Shared Flash bevel and metal buttons. */
+dialog { max-width: 92vw; border: calc(.5 * var(--game-vh)) solid #111; border-radius: 0; background: #333; box-shadow: var(--bevel); }
+dialog::backdrop { background: transparent; }
+dialog h2 { font-size: calc(4.2 * var(--game-vh)); text-shadow: 0 1px 2px #aaa6; }
+dialog.turn-dialog { width: calc(50 * var(--game-vw)); height: calc(33.5 * var(--game-vh)); text-align: center; }
+.turn-dialog #modal-content { height: 100%; padding: calc(7.5 * var(--game-vh)) 4% 3%; }
+.turn-dialog h2 { margin: 0; font-size: calc(6 * var(--game-vh)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.turn-dialog .actions { margin-top: calc(4.6 * var(--game-vh)); justify-content: center; }
+.actions button, .actions .primary, .metal-button, .ok-button, .custom-deck-button, .deck-actions button {
+  background: linear-gradient(90deg, #696969, #b7b7b7 48%, #666); color: #252525;
+  border: calc(.3 * var(--game-vh)) solid #111; border-radius: calc(1 * var(--game-vh));
+  box-shadow: inset 0 1px 2px #ddd5; font-weight: bold;
+}
+.actions button:hover, .metal-button:hover, .ok-button:hover, .custom-deck-button:hover, .deck-actions button:hover { filter: brightness(1.15); }
+.turn-dialog .actions button { flex: 0 0 46%; padding: 0; height: calc(6.7 * var(--game-vh)); font-size: calc(5 * var(--game-vh)); }
+.result-dialog { width: calc(50 * var(--game-vw)); text-align: center; }
+.result-dialog #modal-content { padding: calc(4 * var(--game-vh)) calc(3 * var(--game-vw)); }
+.result-dialog h2 { font-size: calc(4.8 * var(--game-vh)); }
+.result-dialog p { color: #90423f; font-size: calc(2.8 * var(--game-vh)); }
+.result-dialog .actions { flex-direction: column; align-items: center; gap: calc(1.2 * var(--game-vh)); }
+.result-dialog .actions button { width: 60%; flex: none; padding: 0; min-height: calc(4.5 * var(--game-vh)); font-size: calc(2.8 * var(--game-vh)); }
+.setup-screen { padding: 0; background: radial-gradient(ellipse at 50% 70%, #a9140d, #541613); }
+.setup-screen h1 { position: absolute; left: 5%; top: 3.4%; font-size: calc(6.4 * var(--game-vh)); text-shadow: 1px 1px #7776; margin: 0; }
+.setup-grid { position: absolute; left: 3.8%; right: 3.8%; top: 13.4%; height: 75.7%; gap: 3.8%; }
+.duelist { padding: 0; border-color: #171717; box-shadow: inset 0 0 0 1px #ffffff2b; }
+.duelist-blue { background: #3063a7; }
+.duelist-red { background: #ac5656; }
+.duelist label { position: absolute; left: 7%; width: 86%; top: 5%; font-size: calc(2.5 * var(--game-vh)); }
+.duelist input { height: calc(8.5 * var(--game-vh)); font-size: calc(5 * var(--game-vh)); border: 0; border-radius: 0; background: radial-gradient(ellipse, #777, #101010 85%); }
+.controller-switch { right: 7%; top: 9%; width: calc(3.2 * var(--game-vw)); }
+.controller-switch button { height: calc(4.2 * var(--game-vh)); position: relative; }
+.controller-switch button:first-child:after, .controller-switch button:last-child:after { content: ''; position: absolute; inset: 0; background: url('assets/avatar-1.svg') center / contain no-repeat; }
+.controller-switch button:last-child:after { background-image: url('assets/avatar-0.svg'); }
+.controller-switch button.active { background: linear-gradient(#b5b8a7, #536157); box-shadow: none; }
+.avatar-picker { position: absolute; left: 11%; right: 11%; top: 26.7%; grid-template-columns: 10% 1fr 10%; height: 44.3%; margin: 0; gap: 4%; }
+.avatar-frame { border: calc(.45 * var(--game-vh)) solid #111; background: #333; box-shadow: var(--bevel); }
+.avatar-frame img { width: 90%; height: 90%; }
+.avatar-arrow { height: 60%; font-size: 0; color: transparent; background: url('assets/select-arrow.svg') center / 100% 100% no-repeat; filter: drop-shadow(0 0 3px #ff8a00); }
+.avatar-arrow[data-dir='-1'] { transform: scaleX(-1); }
+.strength-row { position: absolute; left: 22%; top: 78%; width: 56%; margin: 0; font-size: calc(2.5 * var(--game-vh)); }
+.duelist input.strength { position: absolute; left: 21.5%; top: 85%; appearance: none; -webkit-appearance: none; width: 57%; height: calc(1 * var(--game-vh)); margin: 0; border: 0; padding: 0; background: #151515; overflow: visible; box-shadow: none; }
+.strength::-webkit-slider-thumb { appearance: none; width: calc(2.8 * var(--game-vh)); height: calc(2.8 * var(--game-vh)); border-radius: 50%; border: 1px solid #555; background: radial-gradient(circle at 40% 35%, #e3e3e3, #666); }
+.strength::-moz-range-thumb { width: calc(2.8 * var(--game-vh)); height: calc(2.8 * var(--game-vh)); border-radius: 50%; border: 1px solid #555; background: radial-gradient(circle at 40% 35%, #e3e3e3, #666); }
+.custom-deck-button { position: absolute; left: 30%; bottom: 5.6%; width: 40%; margin: 0; font-size: calc(2.2 * var(--game-vh)); padding: 0; }
+.deck-builder { background: radial-gradient(ellipse at 15% 100%, #b6150e, #541614); gap: 3% !important; }
+.deck-catalog { gap: calc(2 * var(--game-vw)); padding: calc(2.2 * var(--game-vh)) calc(1.2 * var(--game-vw)); background: linear-gradient(90deg, #737373, #515151); }
+.deck-choice { padding: calc(.6 * var(--game-vh)); border-color: #242424; box-shadow: inset 1px 0 2px #aaa8; }
+.deck-choice .card:hover, .deck-choice .card:focus-visible { transform: none; box-shadow: inset 0 0 0 1px #e3d071; }
+.deck-value { white-space: pre-line; align-self: flex-start; font-size: calc(1.4 * var(--game-vh)); line-height: 1.1; margin: calc(.5 * var(--game-vh)) 0; }
+.deck-summary { white-space: pre-line; font-size: calc(2.7 * var(--game-vh)); line-height: 1.6; }
+.deck-actions { gap: calc(1 * var(--game-vw)); }
+.deck-actions button { min-width: calc(12.5 * var(--game-vw)); font-size: calc(3.4 * var(--game-vh)); padding: 0 4px; }
+.title-monster { object-fit: contain; }
+.active-duelist { filter: drop-shadow(0 0 calc(1.7 * var(--game-vh)) #fff9); }
+.player-health:has(~ .pile) { z-index: 1; }
+.deal-flight { position: fixed !important; z-index: 120; pointer-events: none !important; }
+.upgrade-decal { border: 0; background: none; }
+/* Lift the actual card. No enlarged duplicate card is created. */
+.hand .card, .field .card, .deck-choice .card { transform-origin: center; transition: transform .12s ease-out, border-color .12s; }
+.hand .card:hover, .hand .card:focus-visible,
+.field .card:hover, .field .card:focus-visible,
+.deck-choice .card:hover, .deck-choice .card:focus-visible {
+  transform: translateY(calc(-.5 * var(--game-vh))) scale(1.05); z-index: 15;
+}
+.field-effect-panel {
+  position: fixed; z-index: 210; display: flex; flex-wrap: wrap; gap: 1px;
+  pointer-events: none; font: bold calc(1.75 * var(--game-vh))/1.15 Arial, sans-serif;
+  color: #101010; text-align: center;
+}
+.field-effect { flex: 1 1 auto; padding: 1px 5px; overflow-wrap: anywhere; }
+.field-effect.beneficial { background: radial-gradient(ellipse, #ffe552 40%, #e2c037 65%, transparent 100%); }
+.field-effect.harmful { background: radial-gradient(ellipse, #c300b2 40%, #880088 65%, transparent 100%); }
+
+/* The Emo reaction must preserve the battle card's absolute anchor. */
+.battle-card.emo-reaction { position: absolute; isolation: isolate; }
+
+/* Flash keeps full-size cards in view by tightening their overlap. */
+.hand {
+  justify-content: center; gap: var(--hand-gap, 2px); overflow: visible;
+  padding-inline: max(4px, calc(var(--card-w) * .08)); scrollbar-width: none;
+}
+.hand > .card, .hand > .card-back { flex-shrink: 0; margin: 0; }
+.hand > :not(:first-child) { margin-left: calc(-1 * var(--hand-overlap, 0px)); }
+@media (max-width: 700px) {
+  .deck-catalog { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; padding: 8px; }
+  .deck-value, .deck-summary { font-size: 12px; }
+  .deck-actions button { min-width: 54px; font-size: 16px; padding: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .player-health i, .turn-label { transition: none; }
+}
