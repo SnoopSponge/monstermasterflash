@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 110" role="img" aria-label="Dizzy stars">
+  <defs>
+    <radialGradient id="haze" cx="50%" cy="43%" r="62%"><stop offset="0" stop-color="#fff3a1" stop-opacity=".22"/><stop offset=".72" stop-color="#b57a00" stop-opacity=".08"/><stop offset="1" stop-color="#2d1c00" stop-opacity=".4"/></radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="160" height="110" rx="5" fill="url(#haze)"/>
+  <g fill="none" stroke="#ffd84b" stroke-width="3" stroke-linecap="round" opacity=".9" filter="url(#glow)"><path d="M38 44c10-19 73-25 91-4 12 14-8 30-31 30-30 0-46-19-25-29 15-8 36-1 38 8"/><path d="M52 75c16 12 50 16 69 2" stroke-width="2" opacity=".65"/></g>
+  <g fill="#ffe650" stroke="#8a5a00" stroke-width="2" stroke-linejoin="round" filter="url(#glow)"><path d="m26 30 5 9 10 1-7 7 2 10-10-5-9 5 2-10-7-7 10-1z"/><path d="m76 13 4 7 8 1-6 5 2 8-8-4-7 4 1-8-6-5 8-1z"/><path d="m132 25 4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z"/><path d="m136 72 3 6 7 1-5 5 1 7-6-4-7 4 2-7-5-5 7-1z"/></g>
+  <g fill="none" stroke="#fff3a1" stroke-width="2" stroke-linecap="round" opacity=".8"><path d="m16 67-6 4m9 2-7 8m45-60-5-8m83 40 10-3"/></g>
+</svg>
