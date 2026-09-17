@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "description": "The supplied Monster Master HTML5 game with Flash-style presentation refinements.",
-  "scripts": { "test": "node tests/regression.cjs" },
+  "scripts": { "test": "node tests/regression.cjs && node tests/flash-effects.cjs" },
   "devDependencies": { "linkedom": "0.18.13", "css-tree": "3.2.1" }
 }

@@ -299,6 +299,41 @@
     const frozen=effect(card,'Freeze');if(frozen){frozen.value=Math.max(frozen.value||1,turns);return false}
     card.attacksLeft=0;return addEffect(card,'Freeze',false,turns);
   }
+  let flashSerial=0,receivedFlashSerial=0;
+  const flashHistory=[];
+  function flashRect(card,selector){
+    const board=$('#game').getBoundingClientRect();if(!board.width||!board.height)return null;
+    const node=document.querySelector(`.field .card[data-uid="${card.uid}"]`)||document.querySelector(`.hand .card[data-uid="${card.uid}"]`);
+    if(!node)return null;const anchor=selector?node.querySelector(selector):node;
+    if(!anchor)return null;const r=anchor.getBoundingClientRect();
+    return {x:(r.left-board.left)/board.width,y:(r.top-board.top)/board.height,w:r.width/board.width,h:r.height/board.height};
+  }
+  function flashChangedStats(card){
+    if(card.type!=='monster'||card.health<=0||!card.owner.field.includes(card))return;
+    const node=document.querySelector(`.field .card[data-uid="${card.uid}"]`);
+    if(!node||node.dataset.statName!==card.name)return;
+    for(const stat of ['attack','defense']){
+      const before=Number(node.dataset[stat]),after=card[stat];
+      if(Number.isFinite(before)&&after!==before){
+        flashVisual(after>before?'good':'bad',{target:flashRect(card,`.${stat} .stat-value`)});
+      }
+      node.dataset[stat]=after;
+    }
+  }
+  function flashVisual(name,geometry={}){
+    if(['good','bad','fireball','lightning'].includes(name)&&!geometry.target)return;
+    const event={id:++flashSerial,name,geometry};flashHistory.push(event);if(flashHistory.length>64)flashHistory.shift();
+    window.MMFlashEffects?.play(name,geometry);
+  }
+  function receiveFlashVisuals(data,initial=false){
+    const events=data.flashEvents||[];
+    if(!Array.isArray(events)||events.length>64)throw Error('Invalid spell visuals.');
+    for(const event of events){
+      if(!event||!Number.isSafeInteger(event.id)||event.id<1||!['good','bad','lightning','fireball','flood','black-hole'].includes(event.name)||!event.geometry)throw Error('Invalid spell visual.');
+      for(const r of [event.geometry.source,event.geometry.target])if(r&&['x','y','w','h'].some(k=>!Number.isFinite(r[k])||Math.abs(r[k])>4))throw Error('Invalid spell visual placement.');
+      if(event.id>receivedFlashSerial){receivedFlashSerial=event.id;if(!initial)window.MMFlashEffects?.play(event.name,event.geometry)}
+    }
+  }
   function addEffect(card,name,positive=false,value=0){
     if(name==='Freeze'&&freezeImmune(card))return false;
     if(name==='Freeze'&&card.name==='Cinder Hound')return freezeMonster(card,value||1);
@@ -453,10 +488,11 @@
     const summoningUi=card.type==='monster'&&zone==='field'&&card.summonLeft>0?`<span class="summoning-overlay"><small>Summoning…</small><b>${card.summonLeft}</b></span>`:'';
     const monsterUi=card.type==='monster'?`${showWait?`<span class="turn-badge">${wait} turn${wait===1?'':'s'}</span>`:''}<span class="monster-health" aria-label="${Math.max(0,card.health)} of ${card.maxHealth} health">${health}</span>${summoningUi}`:'';
     const frozenUi=card.type==='monster'&&effect(card,'Freeze')?'<span class="frozen-overlay" aria-label="Frozen"><img src="assets/status-frozen.png" alt=""></span>':'';
-    const stats=card.type==='monster'?`<span class="stats"><i class="stat attack${statTone(card.attack,card.baseAttack)}">${family(card)==='Mimic'?'?':card.attack}</i><i class="stat defense${statTone(card.defense,card.baseDefense)}">${family(card)==='Mimic'?'?':card.defense}</i></span>`:'';
+    const stats=card.type==='monster'?`<span class="stats"><i class="stat attack${statTone(card.attack,card.baseAttack)}"><span class="stat-value">${family(card)==='Mimic'?'?':card.attack}</span></i><i class="stat defense${statTone(card.defense,card.baseDefense)}"><span class="stat-value">${family(card)==='Mimic'?'?':card.defense}</span></i></span>`:'';
+    if(card.type==='monster')Object.assign(button.dataset,{statName:card.name,attack:card.attack,defense:card.defense,health:card.health});
     const brief=card.custom?card.custom.description:card.text;
     button.innerHTML=`<span class="card-name">${esc(card.name)}</span>${card.type==='monster'?`<img class="card-art" src="assets/${card.custom?'m-greebler.png':img}" data-fallback="${esc(slug(baseArt,'m','png'))}" alt="">`:`<img class="card-art spell-decal" src="assets/${pngArt?img:`decals/${img}`}" alt="" aria-hidden="true">`}${monsterUi}<span class="card-text">${esc(brief)}</span>${stats}${frozenUi}`;
-    if(card.type==='monster'&&card.name.length>11){
+    if(card.name.length>11){
       const title=button.querySelector('.card-name');title.classList.add('fitted-name');
       title.innerHTML=`<svg viewBox="0 0 100 18" preserveAspectRatio="none" aria-hidden="true"><text x="0" y="14" font-size="14" textLength="100" lengthAdjust="spacingAndGlyphs">${esc(card.name)}</text></svg>`;
     }
@@ -612,7 +648,7 @@
       for(const old of field.children){
         const uid=+old.dataset.uid;
         if(departingCards.has(uid)){const slot=document.createElement('div');slot.className='death-slot';slot.dataset.uid=uid;nodes.push(slot)}
-        else if(remaining.has(uid)){nodes.push(renderCard(remaining.get(uid),'field'));remaining.delete(uid)}
+        else if(remaining.has(uid)){const card=remaining.get(uid);if(!online?.active||online.host)flashChangedStats(card);nodes.push(renderCard(card,'field'));remaining.delete(uid)}
       }
       nodes.push(...[...remaining.values()].map(c=>renderCard(c,'field')));field.replaceChildren(...nodes);
     }
@@ -800,6 +836,16 @@
   }
   function consume(card){if(!card.owner.hand.includes(card))return;spellFlash(card);state.selected=null;const p=card.owner;animateCardToGrave(card);const i=p.hand.indexOf(card);if(i>=0)p.hand.splice(i,1);p.grave.push(card);log(`${p.name} cast ${card.name}.`)}
   function playTargeted(spell,target){
+    const geometry={source:flashRect(spell),target:target?flashRect(target):null};
+    const worked=resolveTargeted(spell,target);
+    if(worked){
+      const special={Lightning:'lightning',Fireball:'fireball'}[spell.name];
+      if(special)flashVisual(special,geometry);
+      else flashChangedStats(target);
+    }
+    return worked;
+  }
+  function resolveTargeted(spell,target){
     if(!playableSpell(spell)||!target?.owner.field.includes(target)||target.owner!==(spell.type==='upgrade'?spell.owner:opponent()))return false;
     let value;
     switch(spell.name){
@@ -838,8 +884,8 @@
     switch(card.name){
       case 'Ice Age':return o.field.reduce((changed,monster)=>freezeMonster(monster)||changed,false);
       case 'Reinforce':if(p.deploys>=p.hand.filter(c=>c.type==='monster').length)return false;p.deploys++;return true;
-      case 'Black Hole':if(!p.field.length&&!o.field.length)return false;[...p.field,...o.field].forEach(kill);return true;
-      case 'Flood':if(!p.field.length&&!o.field.length)return false;[...p.field,...o.field].forEach(c=>damageMonster(c,1));return true;
+      case 'Black Hole':if(!p.field.length&&!o.field.length)return false;flashVisual('black-hole');[...p.field,...o.field].forEach(c=>kill(c));return true;
+      case 'Flood':if(!p.field.length&&!o.field.length)return false;flashVisual('flood');[...p.field,...o.field].forEach(c=>damageMonster(c,1));return true;
       case 'Doom':if(!o.field.length)return false;target=[...o.field].sort((a,b)=>a.attack-b.attack)[0];kill(target);return true;
       case 'Steal':if(!o.hand.length)return false;target=o.hand.splice(Math.floor(Math.random()*o.hand.length),1)[0];target.owner=p;p.hand.push(target);return true;
       case 'Forget':if(!o.hand.length)return false;for(let i=0;i<2&&o.hand.length;i++){target=o.hand.splice(Math.floor(Math.random()*o.hand.length),1)[0];o.grave.push(target)}return true;
@@ -1067,6 +1113,7 @@
   }
   function showRules(){showModal('<h2>How to play</h2><p>Draw one card each turn. Deploy one monster and freely play special cards. Attack and defense roll from zero to their stat; the higher roll wins and the difference is damage. Summoning and stunned monsters can be attacked. Clear the enemy field to strike the opposing player.</p><div class="actions"><button data-close>Got it</button></div>')}
   function leaveDuel(screen='title'){
+    window.MMFlashEffects?.clear();flashHistory.length=0;
     if(online?.active){online.cancel();screen='title'}
     hideFieldEffects();
     state.session++;state.over=true;state.paused=false;state.animating=false;state.selected=null;
@@ -1081,6 +1128,7 @@
   function syncControllerName(i){const input=$(`#p${i+1}-name`);input.disabled=state.controllers[i]==='computer';if(input.disabled)input.value='Computer';else if(input.value==='Computer')input.value=`Player ${i+1}`}
   function openingHand(p){draw(p,5)}
   function begin(){
+    window.MMFlashEffects?.clear();flashHistory.length=0;
     online?.clearStatus();
     if($('#modal').open)$('#modal').close();
     clearTimeout(announcementTimer);$('#turn-label').classList.remove('announcing');
@@ -1095,7 +1143,7 @@
 
   function networkCard(card){return JSON.parse(JSON.stringify(card,(key,value)=>state.players.includes(value)?{$player:value.index}:value))}
   function networkSnapshot(seat){
-    return {current:state.current,barrier:state.barrier,over:state.over,animating:state.animating,revealed:state.revealed&&state.current===seat,logs:[...state.logs],selected:state.current===seat?state.selected?.uid:null,onlineWinner:state.onlineWinner,onlineReason:state.onlineReason,
+    return {current:state.current,barrier:state.barrier,over:state.over,animating:state.animating,revealed:state.revealed&&state.current===seat,logs:[...state.logs],flashEvents:[...flashHistory],selected:state.current===seat?state.selected?.uid:null,onlineWinner:state.onlineWinner,onlineReason:state.onlineReason,
       players:state.players.map(p=>({index:p.index,name:p.name,controller:'human',avatar:p.avatar,health:p.health,maxHealth:p.maxHealth,deploys:p.deploys,
         deck:Array.from({length:p.deck.length},(_,i)=>({uid:-1000-p.index*10000-i,hidden:true})),
         hand:p.index===seat||(state.revealed&&state.current===seat)?p.hand.map(networkCard):p.hand.map(c=>({uid:c.uid,hidden:true})),field:p.field.map(networkCard),grave:p.grave.map(networkCard)}))};
@@ -1189,7 +1237,7 @@
     },
     async receive(data,initial){
       const session=state.session;
-      if(initial){state.session++;onlineEnded=false;remoteRoll=null;departingCards.clear();visibleCards.clear();lastCardRects.clear();if($('#modal').open)$('#modal').close();installNetworkState(data);render();return}
+      if(initial){state.session++;onlineEnded=false;remoteRoll=null;window.MMFlashEffects?.clear();receivedFlashSerial=0;departingCards.clear();visibleCards.clear();lastCardRects.clear();if($('#modal').open)$('#modal').close();installNetworkState(data);render();receiveFlashVisuals(data,true);return}
       if(remoteRoll){const roll=remoteRoll;await roll;if(session!==state.session)return;
         const all=data.players.flatMap(p=>[...p.field,...p.grave]);
         for(const card of roll.cards){const updated=all.find(c=>c.uid===card.uid);if((updated?.cinderBurns||0)>(card.cinderBurns||0))animateCinderBurn(card)}
@@ -1199,7 +1247,7 @@
       }
       const previous=state.players.flatMap(p=>p.field);
       for(const card of previous){const updated=data.players.flatMap(p=>[...p.field,...p.grave]).find(c=>c.uid===card.uid);const damage=updated?Math.max(0,card.health-updated.health):0;if(damage)animateMonsterDamage(card,damage);if(data.players.some(p=>p.grave.some(c=>c.uid===card.uid))){departingCards.set(card.uid,card);animateCardToGrave(card,100+Math.min(damage,50)*95)}}
-      installNetworkState(data);render();
+      installNetworkState(data);render();receiveFlashVisuals(data);
       if(state.over&&!onlineEnded){onlineEnded=true;if([0,1].includes(state.onlineWinner))finishGame(state.onlineWinner,state.onlineReason)}
     },
     disconnect(message){state.session++;state.over=true;state.animating=false;state.selected=null;remoteRoll=null;$('#battle-overlay').classList.add('hidden');showModal(`<h2>Match disconnected</h2><p>${esc(message)}</p><div class="actions"><button data-confirm-menu>Main Menu</button></div>`)}

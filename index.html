@@ -4,7 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#170708">
-  <meta name="description" content="Monster Master — the original tactical card battle, rebuilt for HTML5.">
+  <meta name="description" content="Monster Master flash game rebuilt in HTML5. Play free in your browser. Verse people online or play offline with a friend or computer. Monster Master plays like a trading card game, where you draw monsters from your deck with different abilities, or magic cards to help you take down your opponent's monsters and life points. It's a must play classic!">
+  <link rel="canonical" href="https://monstermaster.net/">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
   <title>Monster Master</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="classic.css">
@@ -20,8 +26,42 @@
         <button id="title-public">Play Public Match</button>
         <button id="title-private">Play Private Match</button>
         <button id="how-to">Instructions</button>
+        <button id="show-credits">Credits</button>
       </div>
       <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="true">♫ Sound On</button>
+    </section>
+
+    <section id="credits" class="screen credits-screen hidden" aria-label="Credits">
+      <header class="credits-controls">
+        <button id="credits-back" class="metal-button" type="button">Main Menu</button>
+      </header>
+      <div id="credits-scroll" class="credits-scroll" tabindex="0" role="region" aria-label="Scrolling credits. You can also scroll manually.">
+        <div class="credits-content">
+          <h1>MONSTER MASTER<span>REMASTERED</span></h1>
+          <p class="credits-heading">CREDITS</p>
+          <section class="credit-section">
+            <h2>ORIGINAL GAME CREATED BY</h2>
+            <img class="credit-portrait" src="assets/credits-moonkey.jpg" width="60" height="60" alt="Moonkey's profile picture">
+            <h3>Matthew Stradwick</h3>
+            <p class="credit-alias">&quot;aka Moonkey&quot;</p>
+            <p>Thank you for creating Monster Master<br>and the memorable monsters and battles<br>that inspired this recreation.</p>
+          </section>
+          <section class="credit-section">
+            <h2>HTML5 RECREATION &amp; REMASTER</h2>
+            <img class="credit-portrait" src="assets/credits-edgygates.webp" width="100" height="100" alt="EdgyGates' profile picture">
+            <h3>EdgyGates</h3>
+          </section>
+          <section class="credit-section">
+            <h2>A TRIBUTE TO THE FLASH ERA</h2>
+            <p>To the games that filled our childhoods,<br>and the creators who made them unforgettable.</p>
+          </section>
+          <section class="credit-section">
+            <h2>THANK YOU FOR PLAYING</h2>
+            <p>Whether you remember the original<br>or are discovering Monster Master for the first time,<br>thank you for being part of its next chapter.</p>
+            <p class="credits-finale">Build your deck.<br>Summon your monsters.<br><strong>Become the Monster Master.</strong></p>
+          </section>
+        </div>
+      </div>
     </section>
 
     <section id="online" class="screen online-screen hidden" aria-label="Online play">
@@ -98,7 +138,7 @@
     <section id="game" class="screen game-screen hidden" aria-label="Monster Master game board">
       <div id="opponent" class="player-half opponent-half">
         <aside class="player-rail">
-          <div class="pile deck"><img src="assets/classic-card-back.svg" alt=""><span id="p2-deck">40</span></div>
+          <div class="pile deck"><img src="assets/classic-card-back.png" alt=""><span id="p2-deck">40</span></div>
           <strong id="p2-label">Computer</strong>
           <img id="p2-avatar" class="board-avatar" src="assets/avatar-0.svg" alt="">
           <div class="player-health red"><i id="p2-life-bar"></i><b id="p2-life">20</b></div>
@@ -123,7 +163,7 @@
           <strong id="p1-label">Player 1</strong>
           <img id="p1-avatar" class="board-avatar" src="assets/avatar-1.svg" alt="">
           <div class="player-health blue"><i id="p1-life-bar"></i><b id="p1-life">20</b></div>
-          <div class="pile deck"><img src="assets/classic-card-back.svg" alt=""><span id="p1-deck">40</span></div>
+          <div class="pile deck"><img src="assets/classic-card-back.png" alt=""><span id="p1-deck">40</span></div>
         </aside>
         <div class="play-area">
           <div id="p1-field" class="field" aria-label="Your monsters"></div>
@@ -169,6 +209,9 @@
     </section>
   </aside>
   <script src="online.js"></script>
+  <script src="flash-sprites.js"></script>
+  <script src="flash-effects.js"></script>
   <script src="game.js"></script>
+  <script src="credits.js"></script>
 </body>
 </html>
