@@ -479,6 +479,9 @@
     const artPrefix=card.name==='Mystery Egg'?'c':card.type==='monster'?'m':'c';
     const pngArt=card.type==='monster'||RASTER_SPECIALS.has(card.name);
     const img=slug(artName,artPrefix,pngArt?'png':'svg');
+    const catalogMonsterArt=zone==='catalog'&&card.type==='monster'&&!card.custom;
+    const displayedArt=catalogMonsterArt?`catalog/${img.replace(/\.png$/,'.webp')}`:card.custom?'m-greebler.png':img;
+    const imageHints=zone==='catalog'?' loading="lazy" decoding="async" fetchpriority="low"':'';
     const effects=card.effects||[];
     const effectLabel=effects.map(e=>`${e.name}${e.stack>1?' ×'+e.stack:''}`).join(', ');
     const statTone=(value,base)=>value>base?' stat-increased':value<base?' stat-decreased':'';
@@ -491,7 +494,7 @@
     const stats=card.type==='monster'?`<span class="stats"><i class="stat attack${statTone(card.attack,card.baseAttack)}"><span class="stat-value">${family(card)==='Mimic'?'?':card.attack}</span></i><i class="stat defense${statTone(card.defense,card.baseDefense)}"><span class="stat-value">${family(card)==='Mimic'?'?':card.defense}</span></i></span>`:'';
     if(card.type==='monster')Object.assign(button.dataset,{statName:card.name,attack:card.attack,defense:card.defense,health:card.health});
     const brief=card.custom?card.custom.description:card.text;
-    button.innerHTML=`<span class="card-name">${esc(card.name)}</span>${card.type==='monster'?`<img class="card-art" src="assets/${card.custom?'m-greebler.png':img}" data-fallback="${esc(slug(baseArt,'m','png'))}" alt="">`:`<img class="card-art spell-decal" src="assets/${pngArt?img:`decals/${img}`}" alt="" aria-hidden="true">`}${monsterUi}<span class="card-text">${esc(brief)}</span>${stats}${frozenUi}`;
+    button.innerHTML=`<span class="card-name">${esc(card.name)}</span>${card.type==='monster'?`<img class="card-art" src="assets/${displayedArt}" data-fallback="${esc(catalogMonsterArt?img:slug(baseArt,'m','png'))}" alt=""${imageHints}>`:`<img class="card-art spell-decal" src="assets/${pngArt?img:`decals/${img}`}" alt="" aria-hidden="true"${imageHints}>`}${monsterUi}<span class="card-text">${esc(brief)}</span>${stats}${frozenUi}`;
     if(card.name.length>11){
       const title=button.querySelector('.card-name');title.classList.add('fitted-name');
       title.innerHTML=`<svg viewBox="0 0 100 18" preserveAspectRatio="none" aria-hidden="true"><text x="0" y="14" font-size="14" textLength="100" lengthAdjust="spacingAndGlyphs">${esc(card.name)}</text></svg>`;
@@ -1280,7 +1283,7 @@
   window.addEventListener('resize',layoutHands);
   $$('.field').forEach(row=>{row.addEventListener('wheel',e=>{if(row.scrollWidth>row.clientWidth){e.preventDefault();row.scrollLeft+=e.deltaY||e.deltaX}},{passive:false});row.addEventListener('keydown',e=>{if(e.target===row&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();row.scrollLeft+=(e.key==='ArrowRight'?1:-1)*100}})});
   $('#start-game').addEventListener('click',begin);$('#how-to').addEventListener('click',showRules);$('#menu-button').addEventListener('click',openMenu);$('#end-turn').addEventListener('click',endTurn);$('#opponent-target').addEventListener('click',attackPlayer);
-  $('#audio-toggle').addEventListener('click',()=>{audioEnabled=!audioEnabled;$('#audio-toggle').textContent=audioEnabled?'♫ Sound On':'♫ Sound Off';$('#audio-toggle').setAttribute('aria-pressed',String(audioEnabled));syncMenuMusic()});
+  $('#audio-toggle').addEventListener('click',()=>{audioEnabled=!audioEnabled;const toggle=$('#audio-toggle');toggle.setAttribute('aria-pressed',String(audioEnabled));toggle.setAttribute('aria-label',audioEnabled?'Mute sound':'Unmute sound');toggle.title=audioEnabled?'Mute sound':'Unmute sound';syncMenuMusic()});
   document.addEventListener('pointerdown',syncMenuMusic,{once:true,capture:true});
   document.addEventListener('click',e=>{if(e.target.closest?.('button:not(.card):not(.end-turn):not(.opponent-target):not(#audio-toggle)'))sound('#ui-sound')});
   if(typeof MutationObserver!=='undefined')new MutationObserver(syncMenuMusic).observe($('#game'),{attributes:true,attributeFilter:['class']});

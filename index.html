@@ -11,6 +11,7 @@
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
+  <link rel="preload" href="assets/monster-master-script.otf" as="font" type="font/otf" crossorigin>
   <title>Monster Master</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="classic.css">
@@ -19,7 +20,7 @@
 <body>
   <main id="app">
     <section id="title" class="screen title-screen" aria-label="Monster Master title screen">
-      <div class="title-brand"><span>Monster</span><span>Master</span><strong>Remastered</strong></div>
+      <div class="title-brand" aria-label="Monster Master Remastered"><span>Monster</span><span>Master</span><strong>Remastered</strong></div>
       <img class="title-monster" src="assets/title-minotaur.svg" alt="Minotaur holding an axe">
       <div class="title-menu">
         <button id="title-play">Play Offline</button>
@@ -28,7 +29,14 @@
         <button id="how-to">Instructions</button>
         <button id="show-credits">Credits</button>
       </div>
-      <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="true">♫ Sound On</button>
+      <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="true" aria-label="Mute sound" title="Mute sound">
+        <svg viewBox="0 0 72 72" aria-hidden="true">
+          <path class="speaker-body" d="M10 28 Q9 25 13 23 L25 23 L39 11 Q43 8 44 14 L44 58 Q43 64 39 61 L25 49 L13 49 Q9 47 10 44 Z"/>
+          <path class="sound-wave wave-one" d="M50 25 Q59 36 50 47"/>
+          <path class="sound-wave wave-two" d="M57 17 Q72 36 57 55"/>
+          <path class="mute-slash" d="M50 27 L66 45 M66 27 L50 45"/>
+        </svg>
+      </button>
     </section>
 
     <section id="credits" class="screen credits-screen hidden" aria-label="Credits">
