@@ -2,6 +2,12 @@
 
 This is your supplied HTML5 game, updated against **Flash game.mp4** and **Html5 game.mp4**. It is a static HTML/CSS/JavaScript project; no build is required to play.
 
+Custom Deck keeps the fitted 4:3 landscape stage and seven-column catalog in portrait orientation, with vertical touch scrolling. Used, stunned and unavailable monsters are desaturated as a complete card, including their faces, artwork, health bars and stat icons. Ready cards regain their original colors. Fireball and Lightning originate from the spell's real hand position (including face-down computer cards), hold damage until impact, and then discard the spell to the graveyard. Actions wait for the cast to finish; the online guest replays the visual sequence before applying the resulting board state.
+
+Random deck generation now chooses a feasible target of 20–24 monsters in a 40-card deck, using the existing strength band and per-card limits. Partial custom selections stay intact; when that composition cannot fit the chosen cards or budget, the original budget rules take priority. The opening five randomly contain two or three monsters when the deck supports it, with the rest being non-monster cards. Both offline and online use this rule. Each card is dealt from the actual deck exactly once; all later draws follow the shuffled remainder, and completed custom decks keep their contents.
+
+The computer reassesses after every action, evaluates attack/defense dice matchups and defeat risk, targets finishing blows, and can play multiple useful spells in a turn. It weighs healing, summoning delays, status effects, immunities and the cost of spells that affect both boards. It may hold a card or skip a poor attack. It uses its own cards and public board information, without looking at the opponent's hidden cards or predicting future dice rolls. These are tactical heuristics, not an exhaustive search of future turns.
+
 The title menu includes Credits below Instructions. The credit roll includes the supplied Moonkey and EdgyGates portraits, scrolls slowly, and retains a Main Menu button at the top right. Manual scrolling and Escape are supported; reduced-motion users start with automatic scrolling paused. Menu music continues through the credits.
 
 ## Run

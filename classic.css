@@ -173,7 +173,14 @@
 .card .card-name.fitted-name svg { display: block; width: 100%; height: 90%; fill: currentColor; font-family: inherit; font-weight: bold; }
 .card .frozen-overlay, .card .stunned-overlay { left: 7%; right: 7%; top: 16%; height: 55%; }
 .card.monster .card-art { left: 7%; right: 7%; top: 16%; width: 86%; height: 55%; filter: none; object-fit: fill; }
-.card.monster.exhausted .card-art { filter: brightness(.62); }
+.card.monster.exhausted, .card.monster.stunned, .card.monster.unavailable {
+  /* Desaturate the complete card, including health, icons and stat colors. */
+  filter: grayscale(1) brightness(.85);
+}
+.card.monster.exhausted .card-art, .card.monster.stunned .card-art, .card.monster.unavailable .card-art {
+  /* The parent supplies the effect; do not darken the artwork twice. */
+  filter: none;
+}
 .card.exhausted:after, .card.summoning:after { display: none; }
 .card.monster .card-text {
   top: 16%; height: 55%; border: 1px solid #c5b63c; background: #343434e8; padding: 4%;
@@ -343,11 +350,8 @@ dialog.turn-dialog { width: calc(50 * var(--game-vw)); height: calc(33.5 * var(-
 .deck-catalog { gap: calc(2 * var(--game-vw)); padding: calc(2.2 * var(--game-vh)) calc(1.2 * var(--game-vw)); background: linear-gradient(90deg, #737373, #515151); }
 .deck-catalog, .deck-catalog .card { touch-action: pan-y; }
 .deck-catalog { overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
-@media (max-width: 700px) {
-  .deck-builder { gap: 10px !important; min-height: 0; }
-  .deck-builder > h1, .deck-builder > .ignore-limits, .deck-builder > footer { flex-shrink: 0; }
-  .deck-catalog { flex: 1 1 0; min-height: 0; gap: 8px; padding: 8px; }
-}
+.deck-builder > h1, .deck-builder > .ignore-limits, .deck-builder > footer { flex-shrink: 0; }
+.deck-catalog { flex: 1 1 0; min-height: 0; }
 .deck-choice { padding: calc(.6 * var(--game-vh)); border-color: #242424; box-shadow: inset 1px 0 2px #aaa8; }
 .deck-choice .card:hover, .deck-choice .card:focus-visible { transform: none; box-shadow: inset 0 0 0 1px #e3d071; }
 .deck-value { white-space: pre-line; align-self: flex-start; font-size: calc(1.4 * var(--game-vh)); line-height: 1.1; margin: calc(.5 * var(--game-vh)) 0; }

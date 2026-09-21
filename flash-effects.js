@@ -25,9 +25,10 @@
     }else if(name==='lightning'||name==='fireball'){
       if(!target){stop();return}
       const end={x:target.x+target.w/2,y:target.y+target.h*.42},start=source?{x:source.x+source.w/2,y:source.y+source.h*.42}:{x:end.x,y:end.y+target.h*2};
-      const dx=end.x-start.x,dy=end.y-start.y,distance=Math.max(target.h,Math.hypot(dx,dy)),angle=Math.atan2(dy,dx)*180/Math.PI;
+      const dx=end.x-start.x,dy=end.y-start.y,distance=Math.max(1,Math.hypot(dx,dy)),angle=Math.atan2(dy,dx)*180/Math.PI;
       if(name==='lightning'){
         width=Math.max(target.w*.55,distance*.15);height=distance*1.15;duration=240;
+        // The original bolt's bright endpoint is native y=100: point it at the victim.
         Object.assign(layer.style,{left:`${start.x-width/2}px`,top:`${start.y}px`,transformOrigin:'50% 0',transform:`rotate(${angle-90}deg)`});
       }else{
         const scale=distance/555;width=679*scale;height=200*scale;duration=720;

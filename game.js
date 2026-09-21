@@ -212,10 +212,25 @@
     const maximum=cost()+(slots?pool.slice(-slots).reduce((a,b)=>a+b,0):0);
     const low=Math.min(maximum,Math.max(minimum,strength-300));
     const high=Math.max(minimum,Math.min(maximum,strength+300));
+    // Choose a varied near-even composition, subject to the same cost/copy rules.
+    // A partial custom deck is never rewritten to meet this preference.
+    const completionRange=target=>{
+      const counts={};for(const n of names)counts[n]=(counts[n]||0)+1;
+      const have=names.filter(n=>MONSTERS[n]).length,left=DECK_SIZE-names.length;
+      const need=[left-(target-have),target-have],groups=[[],[]];
+      for(const n of keys){const copies=Math.min(DECK_SIZE,ignoreLimits?DECK_SIZE:Math.max(0,rules[n].limit-(counts[n]||0)));groups[MONSTERS[n]?1:0].push(...Array(copies).fill(rules[n].cost))}
+      let min=cost(),max=min;
+      for(let i=0;i<2;i++){if(need[i]<0||groups[i].length<need[i])return null;groups[i].sort((a,b)=>a-b);min+=groups[i].slice(0,need[i]).reduce((a,b)=>a+b,0);max+=(need[i]?groups[i].slice(-need[i]).reduce((a,b)=>a+b,0):0)}
+      return {min,max};
+    };
+    const targets=[20,21,22,23,24].filter(n=>{const r=completionRange(n);return r&&r.min<=high&&r.max>=low});
+    const monsterTarget=targets.length?targets[Math.floor(Math.random()*targets.length)]:null;
     while(names.length<DECK_SIZE){
       const viable=keys.filter(n=>{
         if(!ignoreLimits&&names.filter(x=>x===n).length>=rules[n].limit)return false;
-        names.push(n);const left=DECK_SIZE-names.length,rest=remainingCosts(),total=cost();names.pop();
+        names.push(n);
+        if(monsterTarget!==null){const r=completionRange(monsterTarget);names.pop();return r&&r.min<=high&&r.max>=low}
+        const left=DECK_SIZE-names.length,rest=remainingCosts(),total=cost();names.pop();
         return rest.length>=left&&total+rest.slice(0,left).reduce((a,b)=>a+b,0)<=high&&total+(left?rest.slice(-left).reduce((a,b)=>a+b,0):0)>=low;
       });
       if(!viable.length)throw Error('Cannot fill this deck within the strength range. Adjust your selected cards.');
@@ -303,7 +318,7 @@
   const flashHistory=[];
   function flashRect(card,selector){
     const board=$('#game').getBoundingClientRect();if(!board.width||!board.height)return null;
-    const node=document.querySelector(`.field .card[data-uid="${card.uid}"]`)||document.querySelector(`.hand .card[data-uid="${card.uid}"]`);
+    const node=document.querySelector(`.field .card[data-uid="${card.uid}"]`)||document.querySelector(`.hand .card[data-uid="${card.uid}"],.hand .card-back[data-uid="${card.uid}"]`);
     if(!node)return null;const anchor=selector?node.querySelector(selector):node;
     if(!anchor)return null;const r=anchor.getBoundingClientRect();
     return {x:(r.left-board.left)/board.width,y:(r.top-board.top)/board.height,w:r.width/board.width,h:r.height/board.height};
@@ -369,7 +384,7 @@
   }
   function animateCardToGrave(card,delay=0){
     if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){finishDeparture(card);return;}
-    const source=document.querySelector(`.card[data-uid="${card.uid}"]`);
+    const source=document.querySelector(`.card[data-uid="${card.uid}"],.card-back[data-uid="${card.uid}"]`);
     const target=Number.isInteger(card.capturedBy)?$(`#p${card.capturedBy+1}-hand`):$(`#p${card.owner.index+1}-grave-pile`);
     if(!source||!target){finishDeparture(card);return;}
     const start=source.getBoundingClientRect(),end=target.getBoundingClientRect();
@@ -837,9 +852,26 @@
     if(state.selected?.uid===card.uid)state.selected=null;
     removeEffects(card,true);removeEffects(card,false);
   }
-  function consume(card){if(!card.owner.hand.includes(card))return;spellFlash(card);state.selected=null;const p=card.owner;animateCardToGrave(card);const i=p.hand.indexOf(card);if(i>=0)p.hand.splice(i,1);p.grave.push(card);log(`${p.name} cast ${card.name}.`)}
+  let pendingSpell=null;
+  function spellDuration(name){return window.matchMedia('(prefers-reduced-motion: reduce)').matches?220:name==='Fireball'?720:240}
+  function consume(card,announced=false){if(!card||pendingSpell?.uid===card.uid||!card.owner.hand.includes(card))return;if(!announced)spellFlash(card);state.selected=null;const p=card.owner;animateCardToGrave(card);const i=p.hand.indexOf(card);if(i>=0)p.hand.splice(i,1);p.grave.push(card);log(`${p.name} cast ${card.name}.`)}
   function playTargeted(spell,target){
     const geometry={source:flashRect(spell),target:target?flashRect(target):null};
+    if(['Lightning','Fireball'].includes(spell.name)){
+      if(!playableSpell(spell)||!target?.owner.field.includes(target)||target.owner!==opponent()||(spell.name==='Fireball'&&target.name==='Cinder Hound'))return false;
+      const session=state.session,job={uid:spell.uid,done:null};pendingSpell=job;state.animating=true;
+      spellFlash(spell);flashVisual(spell.name==='Fireball'?'fireball':'lightning',geometry);
+      job.done=(async()=>{
+        await wait(spellDuration(spell.name));
+        if(session!==state.session){if(pendingSpell===job)pendingSpell=null;return}
+        state.animating=false;const worked=resolveTargeted(spell,target);pendingSpell=null;
+        if(worked)consume(spell,true);
+        state.selected=null;state.animating=true;render();
+        await wait(380);if(session!==state.session)return;
+        state.animating=false;render();
+      })();
+      return true;
+    }
     const worked=resolveTargeted(spell,target);
     if(worked){
       const special={Lightning:'lightning',Fireball:'fireball'}[spell.name];
@@ -1086,21 +1118,118 @@
     if(p.controller==='computer'){const session=state.session;setTimeout(()=>{if(session===state.session)aiTurn()},650)}
     else if(!online?.active)showPassModal(p);
   }
+  function aiValue(c){return 3+c.attack*Math.max(1,c.attacks)*.65+c.defense*.45+c.health*.6}
+  function aiReady(c){return c.summonLeft<1&&!effect(c,'Freeze')&&!effect(c,'Stunned')}
+  function aiDamageValue(c,amount){return Math.min(c.health,amount)*1.7+(amount>=c.health?aiValue(c):0)}
+  function aiHitDamage(a,d,amount){
+    if(amount<=0)return 0;
+    if(['Ninja','Ninja Rat','Shadow Master'].includes(family(a))||(a.name==='Cinder Hound'&&d.name==='Frost Wraith'))return d.health;
+    return amount+(a.name==='Cinder Hound'&&d.name!=='Cinder Hound'?.75:0);
+  }
+  function aiBattleScore(a,d){
+    const attack=battleAttackValue(a,d),defense=battleDefenseValue(d,a);
+    // Exact normal dice outcomes; bounded sampling also supports large custom stats.
+    const na=Math.min(32,attack+1),nd=Math.min(32,defense+1);let score=0;
+    for(let i=0;i<na;i++)for(let j=0;j<nd;j++){
+      const x=Math.floor(i*(attack+1)/na),y=Math.floor(j*(defense+1)/nd);
+      if(x>y){
+        score+=aiDamageValue(d,aiHitDamage(a,d,x-y));
+        if(a.name==='Frost Wraith'&&!freezeImmune(d)&&!effect(d,'Freeze'))score+=d.attack*.7;
+        if(['Ogre','Gorilla'].includes(family(a)))score+=d.attack*.35;
+      }else if(y>x&&!counterImmune(a))score-=aiDamageValue(a,aiHitDamage(d,a,y-x))*1.15;
+    }
+    return score/(na*nd)+(effect(a,'Lucky Charm')?1.5:0)-(effect(d,'Lucky Charm')?1.5:0);
+  }
+  function aiFreezeScore(c){
+    if(freezeImmune(c)||effect(c,'Freeze'))return 0;
+    if(c.name==='Cinder Hound')return 5;
+    return (c.summonLeft<2?c.attack*c.attacks*.9:1)+1;
+  }
+  function aiSpellScore(spell,t,p,o){
+    const ready=t&&aiReady(t),canAttack=ready&&state.barrier<1;
+    const urgent=t?1+(canAttack?.6:0):1;
+    switch(spell.name){
+      case 'Fire Sword':return effect(t,'Fire Sword')?0:(effect(t,'Sword')?2:4)*urgent;
+      case 'Sword':return effect(t,'Sword')||effect(t,'Fire Sword')?0:2*urgent;
+      case 'Ice Shield':return effect(t,'Ice Shield')?0:(effect(t,'Shield')?2:4)*1.1;
+      case 'Shield':return effect(t,'Shield')||effect(t,'Ice Shield')?0:2.5;
+      case 'Heal':return (t.custom?t.custom.healImmune:!t.flesh)?0:Math.min(2,t.maxHealth-t.health)*(t.health<3?3:1.8);
+      case 'Cleanse':return t.effects.filter(e=>!e.positive).reduce((s,e)=>s+(e.name==='Freeze'&&t.health===1?-10:3),0);
+      case 'Antidote':return effect(t,'Poison')?4+effect(t,'Poison').stack:0;
+      case 'Charge!':return canAttack&&t.attack>0?3+t.attack*.5:0;
+      case 'Summon':return t.summonLeft>0?2+t.attack*(state.barrier<1?1:.35):0;
+      case 'Sacrifice':return p.health<9&&p.health<20?Math.min(5,20-p.health)*2-aiValue(t):0;
+      case 'Upgrade':return combinerBase(t)?8:0;
+      case 'Lucky Charm':return effect(t,'Lucky Charm')?0:2+Math.min(3,aiValue(t)/8);
+      case 'Double Hit':return effect(t,'Double Hit')?0:3+t.attack*.7;
+      case 'Berserk':return effect(t,'Berserk')?0:3*urgent-Math.min(2,t.defense)*.6;
+      case 'Undying':return effect(t,'Undying')?0:2+aiValue(t)*.25;
+      case 'Fireball':return t.name==='Cinder Hound'?0:aiDamageValue(t,3);
+      case 'Lightning':return aiDamageValue(t,2);
+      case 'Poison':return !t.flesh||effect(t,'Poison')?0:3+Math.min(2,t.health);
+      case 'Freeze':return aiFreezeScore(t);
+      case 'Exhaustion':return t.attacksLeft>1?2+t.attack*.5:0;
+      case 'Time Warp':return t.summonLeft<2?3+t.attack*.7:0;
+      case 'Curse':return effect(t,'Curse')?0:(Math.min(1,t.attack)+Math.min(1,t.defense))*2;
+      case 'Weaken':return effect(t,'Weaken')?0:Math.min(3,t.attack)*1.8;
+      case 'Vulnerable':return effect(t,'Vulnerable')?0:Math.min(3,t.defense)*(p.field.some(aiReady)?2:1);
+      case 'Strip':return t.effects.filter(e=>e.positive).length*3;
+      case 'Psychic':return t.sentient&&t.summonLeft<1&&!effect(t,'Psychic')?4+(aiReady(t)&&t.attacksLeft>0?t.attack*t.attacksLeft:0):0;
+      case 'Ice Age':return o.field.reduce((s,c)=>s+aiFreezeScore(c),0);
+      case 'Black Hole':return o.field.reduce((s,c)=>s+aiValue(c),0)-p.field.reduce((s,c)=>s+aiValue(c),0)-4;
+      case 'Flood':return o.field.reduce((s,c)=>s+aiDamageValue(c,1),0)-p.field.reduce((s,c)=>s+aiDamageValue(c,1),0)-1;
+      case 'Plague':return o.field.filter(c=>c.flesh&&!effect(c,'Poison')).length*4-p.field.filter(c=>c.flesh&&!effect(c,'Poison')).length*4;
+      case 'Barrier':return state.barrier===0&&o.field.filter(aiReady).reduce((s,c)=>s+c.attack*c.attacks,0)>p.field.filter(aiReady).reduce((s,c)=>s+c.attack*c.attacks,0)+3?7:0;
+      case 'Restore':return Math.min(2,p.maxHealth-p.health)*(p.health<8?4:1.5);
+      case 'Gift':return p.deck.length>2?5:0;
+      case 'Steal':return o.hand.length?5:0;
+      case 'Forget':return Math.min(2,o.hand.length)*2;
+      case 'Doom':return o.field.length?aiValue([...o.field].sort((a,b)=>a.attack-b.attack)[0]):0;
+      case 'Reinforce':return p.hand.filter(c=>c.type==='monster').length>p.deploys?6:0;
+      case 'Beckon':return p.deck.some(c=>c.type==='monster')?9:0;
+      case 'Necromancy':return ['deck','hand','grave'].reduce((s,pile)=>s+p[pile].filter(c=>c.name==='Skeleton').length*5,0);
+      case 'Reborn':return p.grave.some(c=>c.type==='monster')?5:0;
+      case 'Monster Egg':return 5;
+      case 'Combine':{
+        // Match the first recipe used by playUtility and account for losing field units.
+        for(const [first,second,result] of COMBOS){const parts=[...combineCandidates(p,first),...combineCandidates(p,second)];if(parts.length===2){const stats=MONSTERS[result];return stats[0]+stats[2]-parts.filter(c=>p.field.includes(c)).reduce((s,c)=>s+aiValue(c),0)}}
+        return 0;
+      }
+      default:return 0;
+    }
+  }
+  function aiChooseAction(p,o,failed=new Set()){
+    const actions=[],offer=(kind,card,target,score)=>{const key=`${kind}:${card.uid}:${target?.uid||0}`;if(score>1&&!failed.has(key))actions.push({kind,card,target,score:score+Math.random()*.15,key})};
+    for(const c of p.hand){
+      if(c.type==='monster'){if(p.deploys>0)offer('deploy',c,null,4+aiValue(c)/(1+c.summon*.7)+(p.field.length===0?4:0));continue}
+      if(c.type==='utility'||c.name==='Ice Age')offer('utility',c,null,aiSpellScore(c,null,p,o));
+      else for(const t of c.type==='upgrade'?p.field:o.field)offer('spell',c,t,aiSpellScore(c,t,p,o));
+    }
+    if(state.barrier<1)for(const a of p.field.filter(c=>aiReady(c)&&c.attacksLeft>0)){
+      if(!o.field.length)offer('direct',a,null,a.attack>=o.health?10000:4+a.attack*2);
+      else for(const d of o.field)offer('battle',a,d,aiBattleScore(a,d));
+    }
+    return actions.sort((a,b)=>b.score-a.score)[0];
+  }
   async function aiTurn(){
     const session=state.session,p=current(),o=opponent();if(state.over||state.animating||p.controller!=='computer'||!await waitUntilResumed(session))return;
-    const pace=async()=>{render();await wait(480);return waitUntilResumed(session)};
-    const utilities=[...p.hand].filter(c=>c.type==='utility'||c.name==='Ice Age');
-    for(const c of utilities){if(playUtility(c)){consume(c);break}}
-    if(!await pace())return;
-    const monster=[...p.hand].filter(c=>c.type==='monster').sort((a,b)=>cardStrength(b)-cardStrength(a))[0];if(monster&&p.deploys>0)deploy(monster);
-    if(!await pace())return;
-    for(const spell of [...p.hand].filter(c=>c.type==='upgrade')){const t=[...p.field].sort((a,b)=>cardStrength(b)-cardStrength(a)).find(t=>playTargeted(spell,t));if(t){consume(spell);break}}
-    if(!await pace())return;
-    for(const spell of [...p.hand].filter(c=>c.type==='downgrade')){const t=[...o.field].sort((a,b)=>cardStrength(b)-cardStrength(a)).find(t=>playTargeted(spell,t));if(t){consume(spell);break}}
-    render();await wait(520);
-    if(!await waitUntilResumed(session))return;
-    if(state.barrier<1){for(const a of [...p.field]){while(p.field.includes(a)&&a.summonLeft<1&&a.attacksLeft>0&&!effect(a,'Freeze')&&!effect(a,'Stunned')&&!state.over){if(!await waitUntilResumed(session))return;if(o.field.length){const target=[...o.field].sort((x,y)=>cardStrength(y)-cardStrength(x))[0];await battle(a,target)}else{a.attacksLeft--;o.health-=a.attack;animatePlayerHit(o,a.attack);sound('#hit-sound');onHit(a,null,a.attack);log(`${a.name} struck ${o.name} for ${a.attack}.`);if(o.health<=0){finishGame(p.index,`${o.name} was defeated.`);break}}if(session!==state.session)return;render();await wait(350)}}}
-    if(await waitUntilResumed(session))completeTurn(p);
+    const failed=new Set();
+    // Re-evaluate after each action; never execute a spell merely to test a target.
+    for(let step=0;step<160;step++){
+      if(!await waitUntilResumed(session)||current()!==p)return;
+      const action=aiChooseAction(p,o,failed);if(!action)break;
+      const {kind,card,target}=action;let worked=false;
+      if(kind==='deploy')worked=deploy(card);
+      else if(kind==='utility'||kind==='spell'){worked=kind==='utility'?playUtility(card):playTargeted(card,target);if(worked)consume(card)}
+      else if(kind==='battle')worked=await battle(card,target);
+      else {card.attacksLeft--;o.health-=card.attack;animatePlayerHit(o,card.attack);sound('#hit-sound');onHit(card,null,card.attack);log(`${card.name} struck ${o.name} for ${card.attack}.`);worked=true;if(o.health<=0)finishGame(p.index,`${o.name} was defeated.`)}
+      if(session!==state.session||state.over)return;
+      if(pendingSpell)await pendingSpell.done;
+      if(session!==state.session||state.over)return;
+      if(!worked)failed.add(action.key);else failed.clear();
+      render();await wait(480);
+    }
+    if(await waitUntilResumed(session)&&current()===p)completeTurn(p);
   }
   async function waitUntilResumed(session){while(state.paused&&session===state.session&&!state.over)await wait(100);return session===state.session&&!state.over}
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1129,7 +1258,15 @@
   function showModal(html,kind=''){state.paused=true;hideFieldEffects();$('#modal-content').innerHTML=html;const d=$('#modal');d.className=kind;if(!d.open)d.showModal();$$('[data-close]').forEach(b=>b.onclick=()=>d.close());const r=$('[data-restart]');if(r)r.onclick=()=>leaveDuel('setup');const m=$('[data-main-menu]');if(m)m.onclick=()=>showModal('<h2>Return to Main Menu?</h2><p>This ends the current duel.</p><div class="actions"><button data-close>Keep playing</button><button data-confirm-menu>Main Menu</button></div>');const confirm=$('[data-confirm-menu]');if(confirm)confirm.onclick=()=>leaveDuel()}
   function openMenu(){if(state.animating){toast('Finish this battle before opening the menu.');return}if(online?.active){showModal('<h2>Online match</h2><p>Online matches keep running while this menu is open.</p><div class="actions"><button data-close>Resume</button><button data-surrender>Surrender</button><button data-leave-online>Leave Match</button></div>');state.paused=false;$('[data-surrender]').onclick=()=>{$('#modal').close();online.surrender()};$('[data-leave-online]').onclick=()=>leaveDuel();return}showModal(`<h2>Game paused</h2><div class="actions"><button data-rules>Rules</button><button data-close>Resume</button><button data-restart>New duel</button><button data-main-menu>Main Menu</button></div>`);const b=$('[data-rules]');if(b)b.onclick=showRules}
   function syncControllerName(i){const input=$(`#p${i+1}-name`);input.disabled=state.controllers[i]==='computer';if(input.disabled)input.value='Computer';else if(input.value==='Computer')input.value=`Player ${i+1}`}
-  function openingHand(p){draw(p,5)}
+  function openingHand(p){
+    // Select actual cards from the shuffled deck, then shuffle the opening five.
+    // No cards are created, replaced or revealed; subsequent draws use deck order.
+    const monsters=p.deck.filter(c=>c.type==='monster'),spells=p.deck.filter(c=>c.type!=='monster');
+    const size=Math.min(5,p.deck.length),wanted=Math.max(size-spells.length,Math.min(monsters.length,2+Math.floor(Math.random()*2)));
+    const opening=shuffle([...shuffle(monsters).slice(0,wanted),...shuffle(spells).slice(0,size-wanted)]);
+    const ids=new Set(opening.map(c=>c.uid));p.deck=p.deck.filter(c=>!ids.has(c.uid));p.deck.push(...opening);
+    draw(p,5);
+  }
   function begin(){
     window.MMFlashEffects?.clear();flashHistory.length=0;
     online?.clearStatus();
@@ -1205,14 +1342,14 @@
       const card=findCard(action.uid);if(!card)return;
       if(action.kind==='click'){
         if(!['hand','field'].includes(action.zone)||!card.owner[action.zone].includes(card)||(action.zone==='hand'&&card.owner.index!==seat))return;
-        return cardClicked(card,action.zone);
+        cardClicked(card,action.zone);if(pendingSpell)await pendingSpell.done;return;
       }
       if(card.owner.index!==seat)return;
       const target=findCard(action.target);
       if(action.kind==='play'&&card.owner.hand.includes(card)){
         if(card.type==='monster')return deploy(card);
         if((card.type==='utility'||card.name==='Ice Age')&&playUtility(card)){consume(card);sound('#card-sound');render()}
-      }else if(action.kind==='spell'&&target&&playTargeted(card,target)){consume(card);state.selected=null;render()}
+      }else if(action.kind==='spell'&&target&&playTargeted(card,target)){consume(card);state.selected=null;render();if(pendingSpell)await pendingSpell.done}
       else if(action.kind==='battle'&&target)return battle(card,target);
       else if(action.kind==='attack'&&card.owner.field.includes(card)){state.selected=card;attackPlayer()}
     },
@@ -1247,6 +1384,17 @@
         const results=[];for(const [i,card] of roll.cards.entries()){const updated=all.find(c=>c.uid===card.uid);const damage=updated?Math.max(0,card.health-updated.health):0;if(damage){results.push(`${card.name} takes ${damage} damage`);await animateBattleDamage(i===0?'#battle-attacker':'#battle-defender',damage)}}
         if(roll.reaction)await showEmoReaction(roll.reaction.uid===roll.cards[0].uid?'#battle-attacker':'#battle-defender',roll.reaction);
         else $('#battle-result').textContent=results.join(' · ')||'No damage';await wait(340);if(session!==state.session)return;$('#battle-overlay').classList.add('hidden');remoteRoll=null;
+      }
+      // Replay the cast against the old board before installing its damage/discard.
+      const projectiles=(data.flashEvents||[]).filter(e=>e.id>receivedFlashSerial&&['fireball','lightning'].includes(e.name));
+      if(projectiles.length){
+        receiveFlashVisuals(data);state.animating=true;
+        await wait(Math.max(...projectiles.map(e=>spellDuration(e.name==='fireball'?'Fireball':'Lightning'))));
+        if(session!==state.session)return;
+        for(const p of state.players)for(const card of p.hand){
+          const discarded=data.players[p.index].grave.find(c=>c.uid===card.uid&&['Fireball','Lightning'].includes(c.name));
+          if(discarded)animateCardToGrave({...card,owner:p});
+        }
       }
       const previous=state.players.flatMap(p=>p.field);
       for(const card of previous){const updated=data.players.flatMap(p=>[...p.field,...p.grave]).find(c=>c.uid===card.uid);const damage=updated?Math.max(0,card.health-updated.health):0;if(damage)animateMonsterDamage(card,damage);if(data.players.some(p=>p.grave.some(c=>c.uid===card.uid))){departingCards.set(card.uid,card);animateCardToGrave(card,100+Math.min(damage,50)*95)}}
