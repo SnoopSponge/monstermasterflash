@@ -1,106 +1,106 @@
-# Monster Master — Flash fidelity update
+# Monster Master Remastered
 
-This is your supplied HTML5 game, updated against **Flash game.mp4** and **Html5 game.mp4**. It is a static HTML/CSS/JavaScript project; no build is required to play.
+**Monster Master Remastered** is an HTML5 recreation of the original Flash card-battle game created by **Matthew Stradwick (Moonkey)**. The remaster was developed by **EdgyGates** to preserve the original game's look and feel while making it playable in modern web browsers without Adobe Flash.
 
-Custom Deck keeps the fitted 4:3 landscape stage and seven-column catalog in portrait orientation, with vertical touch scrolling. Used, stunned and unavailable monsters are desaturated as a complete card, including their faces, artwork, health bars and stat icons. Ready cards regain their original colors. Fireball and Lightning originate from the spell's real hand position (including face-down computer cards), hold damage until impact, and then discard the spell to the graveyard. Actions wait for the cast to finish; the online guest replays the visual sequence before applying the resulting board state.
+Build a 40-card deck, summon monsters, play special cards, and defeat your opponent in turn-based battles. You can play locally against the computer or another person, create custom decks and monsters, or use the optional online multiplayer modes.
 
-Random deck generation now chooses a feasible target of 20–24 monsters in a 40-card deck, using the existing strength band and per-card limits. Partial custom selections stay intact; when that composition cannot fit the chosen cards or budget, the original budget rules take priority. The opening five randomly contain two or three monsters when the deck supports it, with the rest being non-monster cards. Both offline and online use this rule. Each card is dealt from the actual deck exactly once; all later draws follow the shuffled remainder, and completed custom decks keep their contents.
+## Play offline
 
-The computer reassesses after every action, evaluates attack/defense dice matchups and defeat risk, targets finishing blows, and can play multiple useful spells in a turn. It weighs healing, summoning delays, status effects, immunities and the cost of spells that affect both boards. It may hold a card or skip a poor attack. It uses its own cards and public board information, without looking at the opponent's hidden cards or predicting future dice rolls. These are tactical heuristics, not an exhaustive search of future turns.
+Monster Master does not need to be installed and does not need an internet connection for offline play.
 
-The title menu includes Credits below Instructions. The credit roll includes the supplied Moonkey and EdgyGates portraits, scrolls slowly, and retains a Main Menu button at the top right. Manual scrolling and Escape are supported; reduced-motion users start with automatic scrolling paused. Menu music continues through the credits.
+1. Open this repository's GitHub page.
+2. Select **Code**, then **Download ZIP**.
+3. Extract the entire ZIP file. Do not move `index.html` away from the other game files.
+4. Open the extracted `dist` folder.
+5. Double-click `index.html` to launch the game in a modern browser.
+6. Choose **Play Offline** from the main menu.
 
-## Run
+Chrome, Firefox, Edge, and Safari are recommended. Sound may begin only after your first click because modern browsers prevent websites from playing audio automatically.
 
-Extract the entire archive and open `Monster-Master/index.html` in a current desktop browser. Keep every file and the `assets` folder together.
+### If the game does not open correctly
 
-A local server is preferable for consistent custom-card storage and online features. With Python installed, run this inside the `Monster-Master` directory:
+Most browsers can run the game directly from `dist/index.html`. If your browser restricts local files, start a small local web server instead.
 
-```sh
-python -m http.server 8000
+With Python installed, open a terminal in the repository folder and run:
+
+```bash
+python -m http.server 8000 --directory dist
 ```
 
-Then open `http://localhost:8000`. Start with **Play Offline**. The full expanded HTML5 card set is selected by default. Turn on **Original cards only** for the smaller Flash-era catalogue.
+Then visit [http://localhost:8000](http://localhost:8000) in your browser. Stop the server with `Ctrl+C` when you finish playing.
 
-## What changed
+## Offline game modes
 
-- Matched the 4:3 board proportions: hand and field placement, side piles, avatars, muted red/blue backgrounds and thin gold life bars.
-- Restored the orange card backs and lettering from the supplied Flash recording.
-- Used individually tinted, text-focused spell faces with translucent artwork from the corresponding supplied assets behind their descriptions. Monster frames also use individual colors, normal artwork brightness, small combat icons and quieter selection feedback. Expanded monsters now have themed muted gradients: green Slime, plum Witch, bronze Werewolf, icy Ghost, wood-gold Mimic, sea-blue Kraken, ochre Cyclops and violet-gray Emo. Combination monsters mix their source families, and upgrades inherit their base monster’s palette.
-- Rebuilt the metallic center divider, large orange turn arrow and cyan barrier outline. Played spell names appear briefly on the divider.
-- Added the original-style **Ready** dialog at every offline human turn, including games against the computer. Actions and ending the turn are blocked until the dialog closes.
-- Reworked battle presentation: square beveled frame, no screen dimming, normal-size cards, sword/shield roll graphics, named effects and ability text under the cards. Damage animates the entire card-and-caption wrapper together, with captions in normal document flow so the enlarging card cannot overlap them. The stronger original hit animation is restored: 35% enlargement, a 7-pixel sideways shake and a bright impact flash over 0.52 seconds. Both the card and captions follow these same keyframes.
-- Changed dealing and deployment to card movement from the deck or previous position. Discards travel to the graveyard without the former shrinking/spinning effect.
-- Spaced out AI plays and added feedback for direct damage to a player. The AI's card choices and underlying combat rules are retained.
-- Removed duplicate floating card previews. Hover or keyboard focus slightly lifts/enlarges the actual card in the hand, field and catalogue. Monster descriptions appear over their artwork. On the field, effect names appear just below the hovered monster on gold (positive) or purple (negative) strips; the text follows the hover movement without being clipped by the scrolling field. Increased attack/defense values are blue and decreased values red. Tiny effect badges are removed. Full descriptions and effect names remain in accessible labels.
-- Added **Restart** and **Change Players** to the offline result dialog. Fixed a modal close/reopen race and prevented Enter on a focused button from also ending the turn.
-- Retained online play, custom-card creation, expanded cards and deck building. Offline Ready dialogs are excluded from online turns.
-- Fixed The Emo's successful 25% heart reaction so its battle card stays anchored while the hearts fly out.
-- Removed Pack A Punch from card definitions, deck rules and assets. Added **Upgrade** as a non-monster upgrade card (value 160, limit 1) in the expanded deck pool. Apply it to any friendly symbol monster to transform that target into the corresponding combined monster. An upgraded symbol produces the upgraded combined monster; non-symbol monsters are invalid targets and do not consume the card.
-- Renamed **Double Strike** to **Double Hit** throughout its card data, artwork path and effect handling.
-- Hands now keep full-size cards visible by increasing their overlap as more cards are drawn, matching Flash without a scrollbar. Hovering brings the actual card forward.
-- Center card announcements have a soft white oval glow that appears and fades together with the text.
-- Lightning, Fireball, Flood and Black Hole use the supplied original Flash vector timelines at 25 frames per second, with transparent backgrounds and placement based on the reference videos. Stat changes use the supplied 40-frame expanding circle, centered on the changed number: yellow for increases, purple/red for decreases. Berserk and Curse animate each changed stat separately; unchanged stats do not flash. Health changes, including healing, never trigger stat circles. Overlays survive board redraws, expire automatically, clear on leaving a match, and replay once per event for online opponents. The existing health explosion is unchanged.
-- The high-resolution supplied card back replaces the old image on both draw piles and hidden hands.
-- `flash-sprites.js` contains the adapted original vector timelines; `flash-effects.js` controls their placement and lifetime. The import script in `tests` rebuilds the timelines from the four supplied ZIP exports and the retained stat-circle reference in `tests/fixtures`. Run `node tests/import-flash-sprites.cjs --stat-only` to rebuild just the circle. Native canvas rendering and effect lifecycle tests accompany the gameplay regression checks; in-browser visual verification remains outstanding.
-- Stun uses the greyed-out monster art without an overlay. Freeze keeps its decal and deals 1 frostbite damage on thawing, including removal by Cleanse. Frost Wraith is immune. The first freeze extinguishes Cinder Hound into Hound, preserving current stats and health; Hound loses all fire powers and can be frozen normally by subsequent freezes.
-- New expanded cards: Lucky Charm (value 60, limit 2), Exhaustion (30, 3), Ice Age (100, 1), Frost Wraith (60, 2), and Cinder Hound (55, 2), using the supplied artwork. Double-click Ice Age in your hand to affect every eligible enemy without selecting a target; keyboard activation also works. Hound uses the supplied artwork and is available through transformation only.
-- Lucky Charm shows the original battle roll, announces "Lucky charm" in a white glow beneath the affected die, rerolls that die, then displays the better result in yellow. It removes its attached effect; ties leave the charm attached. If the winner changes, the other monster may use its own charm. Online players see the same sequence.
-- Frost Wraith always freezes eligible enemies on damaging battle hits. Cinder Hound defeats Frost Wraith on a damaging hit; against other monsters, a damaging hit has a 75% chance to deal 1 immediate extra burn damage. A brief flame burst covers the burned enemy, including during online battle playback; reduced-motion mode uses a static glow.
-- Overflowing card descriptions scroll slowly on hover or keyboard focus, pausing at the beginning and end. Long battle notes scroll automatically. Automatic scrolling respects reduced-motion preferences.
-- Cinder Hound is immune to Fireball and bonus burn damage. Its successful bonus burn thaws frozen targets without frostbite, while retaining the fire damage. This interaction is intentionally omitted from its card description.
-- Ghost only curses its attacker if it survives the whole hit, including bonus damage. Exhaustion requires more than one remaining attack. Menu music continues throughout selection screens and stops when a match begins.
+- Play against the computer without revealing the computer's hand.
+- Play a local two-player match on the same device.
+- Use the original card set or the expanded remastered set.
+- Generate a randomized 40-card deck or build your own custom deck.
+- Create and import custom monster cards with your own artwork, statistics, and abilities.
 
-Most presentation changes live in `classic.css`, loaded after the supplied `styles.css`. Behavior changes are in `game.js`; `index.html` loads the new stylesheet and `asset-fallbacks.js`. The supplied `styles.css`, `custom-cards.js` and `online.js` are unchanged.
+Custom cards and settings are stored in the browser used to create them. Export important custom cards if you want a backup or plan to move them to another browser or device.
 
-## Restored assets
+## How to play
 
-The supplied `assets.zip` is integrated. Its active files are included byte-for-byte, except for the retired Pack A Punch image and the old Double Strike filename. Double Hit reuses those original pixels under its new name. The active set includes:
+Monster Master is a turn-based card game. Each player uses monster and special cards to control the battlefield and reduce the opposing player's health to zero.
 
-- all six original SVG avatars, used on the board, in setup and in controller selectors;
-- the original title Minotaur and full-resolution Dragon illustration;
-- expanded and upgraded monster artwork;
-- the frozen, stunned and upgrade overlay images;
-- the original card, hit and UI sounds, plus menu music.
+- Drag a monster from your hand onto your side of the battlefield, or select it and then select the field.
+- Some monsters must finish summoning before they can attack.
+- Drag a ready monster toward an opposing monster or the opposing player to attack.
+- Play special cards to damage, heal, strengthen, weaken, summon, or otherwise affect cards in play.
+- Select **End Turn**, or press `Enter`, when you are finished.
+- Press `Escape` to open the in-game menu.
+- Hover over an active card to read its description and abilities.
 
-Temporary avatar/title substitutions, video-cropped Dragon artwork, CSS-only status substitutes and synthesized sound effects have been replaced. Every built-in monster's image path—including aliases and every render zone—resolves to a bundled file. A neutral silhouette remains only as error recovery for damaged or missing user-imported images; no built-in card depends on it.
+The opening barrier prevents immediate direct attacks on a player. Once it disappears, monsters can attack the opposing player when no rule or card effect prevents it.
 
-The orange Flash-style card back from the previous fidelity pass is retained as `assets/classic-card-back.svg`. The supplied `assets/card-back.svg` is also included unchanged; it contains the plain red face seen in the HTML5 recording. The game uses the orange version to preserve the reference look. The turn arrow, selection arrows and sword/shield icons from the fidelity pass are also retained.
+## Features
 
-The active spell illustrations are displayed as translucent decals. The SVG emblems in `assets/decals/` are derived from the supplied artwork with plain card backgrounds removed and the full portrait viewport restored; their relative translucency is preserved with stronger opacity for clearer emblems. Expanded PNG illustrations use brighter themed faces (including periwinkle Freeze and red Berserk), larger decals at 42% opacity and smaller, centered body text. CSS silhouette clipping removes the background around Freeze, Berserk, Time Warp and Monster Egg without changing their source PNGs; soft display masks blend the flame, cloud and undead artwork into their faces. `tests/build-decals.py` regenerates the SVG derivatives. Curse, Summon and Doom contain no separate emblem in the supplied SVGs, so those faces remain plain. The retired Pack A Punch artwork was removed, and the renamed Double Hit art is stored as `assets/c-double-hit.png`.
+- Faithful recreation of the original Flash presentation and card-battle system
+- Original and expanded monster-card collections
+- Animated summoning, attacks, damage, status effects, and card movement
+- Monster combinations that create powerful super monsters
+- Custom 40-card deck builder
+- Custom monster-card creator with imported images and animated GIF support
+- Computer and local two-player opponents
+- Responsive controls and layouts for desktop and mobile screens
+- Music, sound effects, scrolling credits, and remastered presentation
+- Optional public and private peer-to-peer online matches with opponent chat
 
-## Verification
+## Optional online play
 
-The included automated checks pass:
+**Play Public Match** and **Play Private Match** require an internet connection. The game itself can be hosted as static files and does not require the project owner to operate a game server. It uses NetplayJS's shared matchmaking/signaling service to establish WebRTC peer-to-peer matches.
 
-- single-player Ready gate and escaped player names;
-- opening deal, one-monster deployment limit and targeted spells;
-- spell announcements, accessible card labels and spell-face markup;
-- battle effect/ability captions and shared card/caption damage animation;
-- hover effect labels, cleanup, absence of duplicate previews and colored modified stats;
-- stationary Emo heart reactions, Upgrade's targeted base/upgraded transformations and rejection of non-symbol targets, Double Hit naming and crowded-hand overlap calculations;
-- completion of normal and reduced-motion battle code paths;
-- AI transition back to a paused human turn;
-- expanded catalogue enabled by default, original-card catalogue, Fill and Save;
-- clean restarts, victory Restart and modal reopen behavior;
-- exclusion of offline Ready dialogs from online turns;
-- rendering every defined monster and spell without a JavaScript exception, with an explicit frame palette for every built-in monster and upgrade;
-- existence of every built-in image, status overlay, avatar, audio and CSS asset;
-- JavaScript syntax and parsing both stylesheets.
+The availability of online play depends on that free external service and both players' networks. Private invite links last only while the host keeps the lobby open. Both players should use the same version of the game.
 
-Run them from this directory with:
+Custom or imported monster cards are currently intended for offline play and are not transferred to an online opponent.
 
-```sh
-npm install
-npm test
+## Project structure
+
+```text
+dist/                    Playable browser build
+  index.html             Game entry point
+  game.js                Core rules and gameplay
+  online.js              Online lobby and synchronization
+  custom-cards.js        Custom card editor and storage
+  styles.css             Interface, cards, and animations
+  assets/                Artwork, music, and sound effects
+tests/                   Automated rules and online tests
+THIRD-PARTY-NOTICES.md   Third-party software acknowledgements
 ```
 
-The retained supplied assets were compared byte-for-byte, PNGs were decoded, SVGs were parsed, and all four MP3 files were inspected successfully. The derived SVG decals were rendered and inspected together. Custom-card and online code remains unchanged.
+The game is written with standard HTML, CSS, and JavaScript. No Flash Player, package installation, build step, account, API key, or paid subscription is required to play the included build.
 
-These are DOM/state regression checks. Layout, media and animation browser APIs are stubbed, as are custom-card storage and the online adapter. **A live browser visual/play test was blocked by the environment's local-file and local-server navigation policy.** Pixel alignment, real animation playback, mobile layout, sound playback and two-client online play remain unverified. This is a fidelity pass, not a claim of pixel-perfect equivalence.
+## Development and testing
 
-For a final browser check, use an 800×600 or 4:3 window: start a duel, acknowledge Ready, deploy a monster, cast a spell, end the turn, battle after the barrier expires, hover cards, restart, and try a narrow/mobile window. If using online play, verify a match between two updated clients before distributing it.
+The files in `dist` form the playable version and can be served by any static web host. After changing the rules or network code, run the included automated checks with Node.js:
 
-Latest refinements: Fireball renders above the damage-card layer; long spell names fit in full; Barrier and Combine use the supplied full-card SVG artwork. Catalog cards allow vertical touch scrolling. Credits show EdgyGates without a prefix and have only the Main Menu control. The supplied favicon bundle and requested search description are included, with a canonical URL of https://monstermaster.net/. Upload the complete folder contents, including icons and site.webmanifest, to the website root.
+```bash
+node tests/rules.test.cjs
+node tests/online.test.cjs
+```
 
-The main-menu Monster Master wordmark now uses a bundled chancery-style font and the original screenshot's broad sizing, two-line spacing and right-shifted “Master” placement. “Remastered” remains a small gold subtitle. The sound control is an icon-only, hand-drawn-style speaker with a crossed-out muted state and accessible labels. The deck catalogue uses 320-pixel WebP previews with lazy asynchronous decoding (about 0.27 MB for all built-in monsters instead of loading roughly 15.4 MB of full PNGs); cards used during gameplay retain their original full-resolution artwork.
+These tests check core card rules and simulated online synchronization. They do not replace visual testing in a browser, particularly on mobile devices.
+
+---
+
+**Build your deck. Summon your monsters. Become the Monster Master.**
